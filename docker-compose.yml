@@ -1,0 +1,77 @@
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    command: ["web"]            
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: mixtum_core.settings
+
+  worker:  # Celery worker
+    build: .
+    env_file:
+      - .env
+    command: ["worker"]         
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+
+  beat:    # Celery Beat
+    build: .
+    env_file:
+      - .env
+    command: ["beat"]           
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+
+  flower:  # Celery dashboard
+    build: .
+    env_file:
+      - .env
+    command: ["flower"]         
+    depends_on:
+      - redis
+      - db
+    ports:
+      - "5555:5555"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mixtumdb}
+      POSTGRES_USER: ${POSTGRES_USER:-mixtumuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mixtumpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    profiles: ["oidc"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    command: ["start-dev"]
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:

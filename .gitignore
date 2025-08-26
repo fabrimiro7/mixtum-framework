@@ -1,0 +1,129 @@
+# =========================
+# OS / Editor trash
+# =========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.orig
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# =========================
+# Python / Build artifacts
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+.Python
+.python-version
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging
+dist/
+build/
+develop-eggs/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+.wheelhouse/
+
+# Tox / Test / Coverage
+.tox/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+pytestdebug.log
+
+# Type checkers
+.mypy_cache/
+dmypy.json
+.pyre/
+.pytype/
+
+# =========================
+# Django
+# =========================
+# DB locali
+db.sqlite3
+db.sqlite3-*
+*.sqlite3
+*.db
+
+# Statici raccolti da collectstatic (WhiteNoise)
+staticfiles/
+!staticfiles/.gitkeep
+
+# Media caricati dagli utenti
+media/
+!media/.gitkeep
+
+# Config locali opzionali
+local_settings.py
+
+# =========================
+# Celery / Flower
+# =========================
+celerybeat-schedule
+celerybeat.pid
+*.pid
+# alcuni setup salvano un DB locale
+flower*sqlite*
+flowerdb*
+flower.log
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+gunicorn*.log
+celery*.log
+
+# =========================
+# Env & secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Node (se hai front-end nel repo)
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+.pnp.js
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+.docker/
+# eventuali mount locali
+postgres_data/
+redis_data/
+tmp/
+tmp/**/*
+!tmp/.gitkeep
+
+# =========================
+# Cert & keys locali (se li generi in dev)
+# =========================
+certs/
+!certs/.gitkeep
