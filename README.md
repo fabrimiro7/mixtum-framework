@@ -1,1 +1,1 @@
-# mixtum-framework
+# Mixtum Framework
