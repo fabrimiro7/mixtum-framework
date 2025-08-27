@@ -34,13 +34,14 @@ services:
       - web
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/www/ccert
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
 
   db:
     image: postgres:16-alpine
@@ -48,8 +49,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-mixtumdb}
       POSTGRES_USER: ${POSTGRES_USER:-mixtumuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mixtumpassword}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -63,5 +62,13 @@ services:
     ports:
       - "8080:8080"
 
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/www/certbot
+
 volumes:
   postgres_data:
+  certbot-etc:
+  certbot-var:
