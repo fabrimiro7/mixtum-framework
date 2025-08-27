@@ -102,6 +102,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "id",
             "email",
             "username",
             "first_name",
@@ -109,6 +110,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "fiscal_code",
             "phone",
             "mobile",
+            "avatar",
             "permission",
         ]
 

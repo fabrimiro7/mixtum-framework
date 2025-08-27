@@ -54,6 +54,8 @@ USER_TYPE_CHOICES = (
     ("NoProfit", "Ente No Profit"),
 )
 
+def user_directory_path(instance, filename):
+    return f'avatars/user_{instance.id}/{filename}'
 
 # -----------------------------
 # User model
@@ -82,6 +84,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     fiscal_code = models.CharField(verbose_name="Codice Fiscale", max_length=16, blank=True, null=True)
     phone = models.CharField(verbose_name="Telefono", max_length=12, blank=True, null=True)
     mobile = models.CharField(verbose_name="Cellulare", max_length=12, blank=True, null=True)
+    avatar = models.ImageField(upload_to=user_directory_path, blank=True, null=True)
 
     # Django auth fields
     USERNAME_FIELD = "email"

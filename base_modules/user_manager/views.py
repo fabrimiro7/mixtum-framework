@@ -2,6 +2,7 @@ import re
 import datetime
 from django.conf import settings
 from django.contrib.auth import logout
+from mixtum_core.settings.base import REMOTE_API
 from rest_framework import status, exceptions
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
@@ -9,6 +10,7 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 from .models import User
+from django.db.models import Q
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     RequestResetPWMail, RequestResetPW,
@@ -25,7 +27,7 @@ else:
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.exceptions import AuthenticationFailed
 from .authentication import (
-    create_access_token, create_refresh_token, decode_refresh_token
+    JWTAuthentication, create_access_token, create_refresh_token, decode_refresh_token
 )
 
 # -----------------------------
@@ -222,3 +224,45 @@ class UserView(CreateAPIView):
             {"user": user_data, "message": "success", "id_user": user.id},
             status=status.HTTP_200_OK,
         )
+
+class UpdateAvatarView(APIView):
+    if REMOTE_API == True:
+        authentication_classes = [JWTAuthentication]  
+
+    def put(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        avatar = request.FILES.get('avatar')
+        if not avatar:
+            return Response({"message": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.avatar = avatar
+        user.save()
+
+        return Response({"message": "Avatar updated successfully"}, status=status.HTTP_200_OK)
+
+class GetUserSAAPIView(APIView):
+    """
+    API view to retrieve a list of users with superadmin or associate permissions.
+
+    This view requires JWT authentication and returns a list of users
+    serialized using the UserDetailSerializer.
+    """
+    serializer_class = UserDetailSerializer  # Serializer to use for response
+
+    if REMOTE_API == True:
+        authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """
+        Retrieve a list of users with superadmin or associate permissions.
+
+        Returns serialized user data as a response with HTTP 200 OK status.
+        """
+        users = User.objects.filter(Q(permission=100) | Q(permission=50))  # Retrieve all users with superadmin or associate permissions
+        serializer = UserDetailSerializer(users, many=True)  # Serialize user data
+
+        return Response(serializer.data, status=status.HTTP_200_OK)  # Return serialized data
