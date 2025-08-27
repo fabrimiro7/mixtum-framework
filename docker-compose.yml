@@ -40,8 +40,7 @@ services:
     volumes:
       - ./nginx/init.sh:/init.sh:ro
       - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./dummy-certs:/etc/letsencrypt:ro
-      - certbot-etc:/etc/letsencrypt
+      - ./letsencrypt_data:/etc/letsencrypt
       - ./certbot-www:/var/www/certbot
     command: ["sh","-c","sh /init.sh && nginx -g 'daemon off;'"]
 
@@ -73,9 +72,8 @@ services:
       - SERVER_NAME=${SERVER_NAME}
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
     volumes:
-      - certbot-etc:/etc/letsencrypt
+      - ./letsencrypt_data:/etc/letsencrypt
       - ./certbot-www:/var/www/certbot
 
 volumes:
   postgres_data:
-  certbot-etc:
