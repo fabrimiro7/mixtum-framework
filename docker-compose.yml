@@ -1,18 +1,14 @@
 services:
   web:
     build: .
-    env_file:
-      - .env
+    env_file: [.env]
     command: ["web"]
-    volumes:
-      - .:/app
-    expose:
-      - "8000"
-    depends_on:
-      - db
-      - redis
+    volumes: [.:/app]
+    expose: ["8000"]
+    depends_on: [db, redis]
     environment:
       DJANGO_SETTINGS_MODULE: mixtum_core.settings
+    restart: unless-stopped
 
   worker:
     build: .
@@ -20,6 +16,7 @@ services:
     command: ["worker"]
     depends_on: [db, redis]
     volumes: [.:/app]
+    restart: unless-stopped
 
   beat:
     build: .
@@ -27,25 +24,26 @@ services:
     command: ["beat"]
     depends_on: [db, redis]
     volumes: [.:/app]
+    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
-    depends_on:
-      - web
+    depends_on: [web]
     environment:
       - SERVER_NAME=${SERVER_NAME}
-    ports:
-      - "80:80"
-      - "443:443"
+    ports: ["80:80", "443:443"]
     volumes:
       - ./nginx/init.sh:/init.sh:ro
       - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./staticfiles:/var/www/static:ro          
       - ./letsencrypt_data:/etc/letsencrypt
       - ./certbot-www:/var/www/certbot
     command: ["sh","-c","sh /init.sh && nginx -g 'daemon off;'"]
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
 
   db:
     image: postgres:16-alpine
@@ -55,6 +53,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mixtumpassword}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -63,8 +62,8 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
     command: ["start-dev"]
-    ports:
-      - "8080:8080"
+    ports: ["8080:8080"]
+    restart: unless-stopped
 
   certbot:
     image: certbot/certbot:latest
@@ -74,6 +73,6 @@ services:
     volumes:
       - ./letsencrypt_data:/etc/letsencrypt
       - ./certbot-www:/var/www/certbot
-
+    # niente restart qui: lo usi "one-shot"
 volumes:
   postgres_data:
