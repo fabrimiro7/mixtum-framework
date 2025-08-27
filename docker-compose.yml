@@ -38,11 +38,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./nginx/init.sh:/init.sh:ro
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./dummy-certs:/etc/letsencrypt:ro
       - certbot-etc:/etc/letsencrypt
       - ./certbot-www:/var/www/certbot
-    command: ["sh","-c","sh /init.sh; nginx -g 'daemon off;'"]
+    command: ["sh","-c","sh /init.sh && nginx -g 'daemon off;'"]
 
   redis:
     image: redis:7-alpine
