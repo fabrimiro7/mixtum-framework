@@ -5,7 +5,7 @@ server {
   server_name ${SERVER_NAME};
 
   location /.well-known/acme-challenge/ {
-    root /var/www/certbot;
+    alias /var/www/certbot/.well-known/acme-challenge/;
   }
 
   location / {
