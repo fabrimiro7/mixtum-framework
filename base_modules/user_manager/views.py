@@ -7,7 +7,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-
+from rest_framework.permissions import AllowAny
 from .models import User
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
@@ -52,6 +52,8 @@ class RegisterView(CreateAPIView):
 # -----------------------------
 class LoginUserView(CreateAPIView):
     serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         if getattr(settings, "AUTH_MODE", "django") == "keycloak":
@@ -59,7 +61,7 @@ class LoginUserView(CreateAPIView):
                 {"detail": "Use Keycloak login (OIDC) and pass Bearer token."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+        print("ciao sono quii")
         email = request.data.get("email")
         password = request.data.get("password")
 
@@ -87,6 +89,9 @@ class LoginUserView(CreateAPIView):
 # Refresh token (local JWT) – disabled in keycloak mode
 # -----------------------------
 class RefreshAPIView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def post(self, request):
         if getattr(settings, "AUTH_MODE", "django") == "keycloak":
             return Response(
@@ -144,7 +149,9 @@ class ResetPassword(APIView):
 # -----------------------------
 class Logout(CreateAPIView):
     serializer_class = UserSerializer
-
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    
     def post(self, request, *args, **kwargs):
         response = Response()
         response.delete_cookie(key="refresh_token")

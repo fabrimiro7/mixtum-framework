@@ -98,7 +98,25 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def is_admin(self):
         return self.permission == 50
+    
+    def is_user(self):
+        return self.permission == 1
 
+    def is_associate(self):
+        return True if self.permission == 50 else False
+
+    def is_partner(self):
+        return True if self.permission == 2 else False
+
+    def is_client(self):
+        return True if self.permission == 1 else False
+
+    def is_at_least_partner(self):
+        return True if self.permission > 1 else False
+
+    def is_at_least_associate(self):
+        return True if self.permission > 49 else False
+    
     def get_type(self):
         return self.user_type
 

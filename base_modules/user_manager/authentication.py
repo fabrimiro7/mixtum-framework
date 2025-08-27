@@ -20,7 +20,7 @@ class JWTAuthentication(BaseAuthentication):
             except User.DoesNotExist:
                 raise exceptions.AuthenticationFailed("user not found")
             return (user, None)
-        raise exceptions.AuthenticationFailed("unauthenticated")
+        raise exceptions.AuthenticationFailed("unauthenticated #001")
 
 def _jwt_secret():
     return getattr(settings, "JWT_SECRET_KEY", settings.SECRET_KEY)

@@ -3,9 +3,15 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parents[2]  # points to project root
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-default-key")
-DEBUG = os.environ.get("DEBUG", "1") in ("1", "true", "True")
+DEBUG = os.environ.get("DEBUG", "1").lower() in ("1", "true", "yes")
+
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "*").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
+CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "1").lower() in ("1", "true", "yes")
+REMOTE_API = os.environ.get("REMOTE_API", "1").lower() in ("1", "true", "yes")
 
 LANGUAGE_CODE = "it-it"
 TIME_ZONE = os.getenv("TIME_ZONE", "Europe/Rome")
@@ -25,6 +31,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
 
     # Third-party
+    "storages",
     "rest_framework",
     "django_celery_results",
     "django_celery_beat",
@@ -32,16 +39,27 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "corsheaders",
 
     # Project apps
     "base_modules.user_manager",
     "base_modules.mailer",
     "base_modules.key_manager",
+    "base_modules.workspace",
+    "base_modules.attachment",
     "plugins.plugin_example",
+    "plugins.meeting",
+    "plugins.academy",
+    "plugins.payments_manager",
+    "plugins.report",
+    "plugins.ticket_manager",
+    "plugins.sprint_manager",
+    "plugins.project_manager",
 ]
 SITE_ID = int(os.getenv("SITE_ID", "1"))
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -73,3 +91,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "mixtum_core.wsgi.application"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# -------------------------------------------------------------------
+# Static & Media settings + storage config
+# -------------------------------------------------------------------
+from .static_media import *   # definisce STATIC_URL, MEDIA_URL, STORAGES base
+from .storage_s3 import *     # se USE_S3=1 override STORAGES["default"] (media) e opz. "staticfiles"

@@ -18,10 +18,41 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
+from base_modules.celery.views import flower_auth
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('v1/accounts/', include('allauth.urls')),  # URL di django-allauth
-    path('v1/users/', include('base_modules.user_manager.urls')),
+
+    # Celery Flower
+    path("flower-auth/", flower_auth, name="flower-auth"),
+
+    # Auth and Users
+    path('api/v1/accounts/', include('allauth.urls')),
+    path('api/v1/users/', include('base_modules.user_manager.urls')),
+
+    # Attachments
+    path('api/attachments/', include(('base_modules.attachment.urls', 'attachment'), namespace='attachment')),
+
+    # Ticket Manager
+    path('api/ticket_manager/', include(('plugins.ticket_manager.urls', 'ticket_manager'), namespace='ticket_manager')),
+
+    # Academy
+    path('api/academy_manager/', include(('plugins.academy.urls', 'academy'), namespace='academy')),
+
+    # Payments Manager
+    path('api/payments_manager/', include(('plugins.payments_manager.urls', 'payments_manager'), namespace='payments_manager')),
+
+    # Meeting manager
+    path('api/meeting_manager/', include(('plugins.meeting.urls', 'meeting'), namespace='meeting')),
+
+    # Project manager
+    path('api/project_manager/', include(('plugins.project_manager.urls', 'project'), namespace='project')),
+
+    # Report manager
+    path('api/report_manager/', include(('plugins.report.urls', 'report'), namespace='report')),
+
+    # Workspace
+    path('api/workspace/', include('base_modules.workspace.urls')),
 ]
 
 

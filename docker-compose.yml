@@ -3,49 +3,39 @@ services:
     build: .
     env_file:
       - .env
-    command: ["web"]            
+    command: ["web"]
     volumes:
       - .:/app
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       - db
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: mixtum_core.settings
 
-  worker:  # Celery worker
+  worker:
     build: .
-    env_file:
-      - .env
-    command: ["worker"]         
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - .:/app
+    env_file: [.env]
+    command: ["worker"]
+    depends_on: [db, redis]
+    volumes: [.:/app]
 
-  beat:    # Celery Beat
+  beat:
     build: .
-    env_file:
-      - .env
-    command: ["beat"]           
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - .:/app
+    env_file: [.env]
+    command: ["beat"]
+    depends_on: [db, redis]
+    volumes: [.:/app]
 
-  flower:  # Celery dashboard
-    build: .
-    env_file:
-      - .env
-    command: ["flower"]         
+  nginx:
+    image: nginx:alpine
     depends_on:
-      - redis
-      - db
+      - web
     ports:
-      - "5555:5555"
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
   redis:
     image: redis:7-alpine
