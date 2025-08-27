@@ -35,10 +35,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - SERVER_NAME=${SERVER_NAME}
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/ccert
+      - certbot-var:/var/www/certbot
 
   redis:
     image: redis:7-alpine
@@ -64,6 +66,9 @@ services:
 
   certbot:
     image: certbot/certbot:latest
+    environment:
+      - SERVER_NAME=${SERVER_NAME}
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/www/certbot
