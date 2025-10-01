@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "base_modules.key_manager",
     "base_modules.workspace",
     "base_modules.attachment",
+    "base_modules.the_watcher",
     "plugins.plugin_example",
     "plugins.meeting",
     "plugins.academy",
