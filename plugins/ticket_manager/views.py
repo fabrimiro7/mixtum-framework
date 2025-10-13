@@ -1,4 +1,5 @@
 from base_modules.attachment.serializers import AttachmentCreateSerializer
+from base_modules.workspace.models import WorkspaceUser
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import status
@@ -14,26 +15,80 @@ from base_modules.user_manager.models import *
 import requests
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from .pagination import StandardResultsSetPagination
 
 class TicketList(generics.ListCreateAPIView):
     serializer_class = TicketSerializer
-    if REMOTE_API == True:
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    if JWTAuthentication is not None:
         authentication_classes = [JWTAuthentication]
 
-    def get(self, request):
-        user = request.user
-        #se sei superadmin torna tutto, se sei associata torna tutti i ticket a cui sei associata, se sei cliente mi torna tutti i ticket di cui sei il proprietario
-        if user.is_superadmin():
-            ticket = Ticket.objects.all()
-        elif user.is_associate():
-            ticket = Ticket.objects.filter(assignees=user)
+    def get_queryset(self):
+        user = self.request.user
+
+        qs = (Ticket.objects
+              .select_related('client', 'project', 'ticket_workspace')
+              .prefetch_related('assignees', 'attachments'))
+
+        if hasattr(user, 'is_superadmin') and user.is_superadmin():
+            pass  
+        elif hasattr(user, 'is_associate') and user.is_associate():
+            qs = qs.filter(assignees=user)
         else:
-            ticket=Ticket.objects.filter(client=user)
-        if ticket:
-            serializer = TicketSerializer(ticket, many=True)
-            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
-        return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            workspace_ids = WorkspaceUser.objects.filter(
+                user=user
+            ).values_list('workspace_id', flat=True)
+
+            users_in_same_ws_ids = WorkspaceUser.objects.filter(
+                workspace_id__in=workspace_ids
+            ).values_list('user_id', flat=True)
+
+            qs = qs.filter(
+                Q(client=user) |
+                Q(ticket_workspace_id__in=workspace_ids) |
+                Q(client_id__in=users_in_same_ws_ids)
+            ).distinct()
+
+        params = self.request.query_params
+
+        status_val = params.get('status')
+        if status_val:
+            qs = qs.filter(status=status_val)
+
+        status_in_val = params.get('status__in')
+        if status_in_val:
+            statuses = [s.strip() for s in status_in_val.split(',') if s.strip()]
+            if statuses:
+                qs = qs.filter(status__in=statuses)
+
+        assigned = params.get('assigned')
+        if assigned == 'true':
+            qs = qs.filter(assignees__isnull=False)
+        elif assigned == 'false':
+            qs = qs.filter(assignees__isnull=True)
+
+        priority = params.get('priority')
+        if priority:
+            qs = qs.filter(priority=priority)
+
+        project = params.get('project')
+        if project:
+            qs = qs.filter(project_id=project)
+
+        search = params.get('search')
+        if search:
+            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search))
+
+        ordering = params.get('ordering')
+        allowed_ordering = {'id', '-id', 'opening_date', '-opening_date', 'closing_date', '-closing_date', 'priority', '-priority'}
+        if ordering in allowed_ordering:
+            qs = qs.order_by(ordering)
+        else:
+            qs = qs.order_by('-opening_date')
+
+        return qs
 
 
 class TicketDetail(generics.RetrieveUpdateAPIView):
