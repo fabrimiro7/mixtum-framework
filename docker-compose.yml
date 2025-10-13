@@ -26,23 +26,22 @@ services:
     volumes: [.:/app]
     restart: unless-stopped
 
-  services:
-    nginx:
-      image: nginx:alpine
-      container_name: app-nginx-1
-      volumes:
-        - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-        - ./nginx/init.sh:/docker-entrypoint.d/10-init.sh:ro
-        - certbot-etc:/etc/letsencrypt
-        - certbot-www:/var/www/certbot
-      environment:
-        SERVER_NAME_APP: "ticket.efestodev.com"
-        SERVER_NAME_ADMIN: "ticket-admin.efestodev.com"
-      depends_on:
-        - web
-      ports:
-        - "80:80"
-        - "443:443"
+  nginx:
+    image: nginx:alpine
+    container_name: app-nginx-1
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/init.sh:/docker-entrypoint.d/10-init.sh:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    environment:
+      SERVER_NAME_APP: "ticket.efestodev.com"
+      SERVER_NAME_ADMIN: "ticket-admin.efestodev.com"
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
 
   redis:
     image: redis:7-alpine
