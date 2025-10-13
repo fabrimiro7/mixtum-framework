@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
-envsubst '$SERVER_NAME' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+envsubst '$SERVER_NAME_APP $SERVER_NAME_ADMIN' \
+  < /etc/nginx/templates/default.conf.template \
+  > /etc/nginx/conf.d/default.conf
 
-echo "Configurazione di Nginx creata per ${SERVER_NAME}"
+echo "Nginx config created for APP=${SERVER_NAME_APP} and ADMIN=${SERVER_NAME_ADMIN}"

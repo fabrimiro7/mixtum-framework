@@ -1,28 +1,30 @@
 map $http_upgrade $connection_upgrade { default upgrade; '' close; }
 
+# --- HTTP (80): redirect a HTTPS + challenge per ENTRAMBI i domini ---
 server {
   listen 80;
-  server_name ${SERVER_NAME};
+  server_name ${SERVER_NAME_APP} ${SERVER_NAME_ADMIN};
 
-  # Serve le challenge di Let's Encrypt
+  # Let's Encrypt http-01
   location /.well-known/acme-challenge/ {
     root /var/www/certbot;
   }
 
-  # Tutto il resto forza HTTPS
+  # Tutto il resto -> HTTPS
   location / {
     return 301 https://$host$request_uri;
   }
 }
 
+# --- HTTPS: APP ---
 server {
   listen 443 ssl;
   http2 on;
-  
-  server_name ${SERVER_NAME};
 
-  ssl_certificate     /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem;
+  server_name ${SERVER_NAME_APP};
+
+  ssl_certificate     /etc/letsencrypt/live/${SERVER_NAME_APP}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME_APP}/privkey.pem;
   ssl_session_timeout 1d;
   ssl_protocols TLSv1.2 TLSv1.3;
   ssl_ciphers HIGH:!aNULL:!MD5;
@@ -32,7 +34,38 @@ server {
   resolver_timeout 5s;
 
   location / {
-    proxy_pass http://web:8000;
+    proxy_pass http://web:8000;     # 👈 NOME DEL SERVIZIO COMPOSE
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+  }
+}
+
+# --- HTTPS: ADMIN ---
+server {
+  listen 443 ssl;
+  http2 on;
+
+  server_name ${SERVER_NAME_ADMIN};
+
+  ssl_certificate     /etc/letsencrypt/live/${SERVER_NAME_ADMIN}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME_ADMIN}/privkey.pem;
+  ssl_session_timeout 1d;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+  ssl_prefer_server_ciphers on;
+
+  resolver 127.0.0.11 ipv6=off valid=10s;
+  resolver_timeout 5s;
+
+  # (Facoltativo) evita 404 sulla root admin
+  location = / {
+    return 301 https://$host/admin/;
+  }
+
+  location / {
+    proxy_pass http://web:8000;     # 👈 NOME DEL SERVIZIO COMPOSE (non IP!)
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
