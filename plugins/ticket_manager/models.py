@@ -18,6 +18,12 @@ STATUS_CHOICES = (
     ('closed', 'Chiuso'),
 )
 
+TYPE_TICKET = (
+    ('bug', 'Bug'),
+    ('feature', 'Feature'),
+    ('evo', 'Evolutiva'),
+)
+
 
 class Ticket(models.Model):
     title = models.CharField(max_length=200, verbose_name="Title")
@@ -26,7 +32,7 @@ class Ticket(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='progetto', verbose_name="Project")
     assignees = models.ManyToManyField(User, related_name='assegnatario', blank=True, verbose_name="Assignees", limit_choices_to={'permission__in': [50, 100]})
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, blank=True, null=True, verbose_name="Priority")
-    hours_estimation = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Hours estimation")
+    hours_estimation = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True, verbose_name="Hours estimation")
     opening_date = models.DateTimeField(auto_now_add=True, null=True, verbose_name="Opening date")
     closing_date = models.DateTimeField(null=True, blank=True, verbose_name="Closing date")
     cost_estimation = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Cost")
@@ -39,6 +45,8 @@ class Ticket(models.Model):
     attachments = models.ManyToManyField(Attachment, related_name='ticket_attachments', blank=True)
     ticket_workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='workspace', blank=True, null=True, verbose_name="Workspace")
     ticket_linked = models.ForeignKey('self', on_delete=models.CASCADE, related_name='linked_ticket', blank=True, null=True, verbose_name="Linked Ticket")
+    ticket_type = models.CharField(max_length=20, choices=TYPE_TICKET, default='bug', blank=True, null=True)
+    payments_status = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

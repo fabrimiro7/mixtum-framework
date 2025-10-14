@@ -1,3 +1,4 @@
+from plugins.project_manager.models import Project
 from rest_framework import serializers
 from base_modules.user_manager.serializers import UserDetailSerializer, UserDetailSerializer
 from base_modules.attachment.serializers import AttachmentSerializer
@@ -9,11 +10,18 @@ class LinkedTicketSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'status',]
 
 
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ['id', 'title']
+
+
 class TicketSerializer(serializers.ModelSerializer):
     client = UserDetailSerializer()
     assignees = UserDetailSerializer(many=True)
     attachments = AttachmentSerializer(many=True)
     ticket_linked = LinkedTicketSerializer()
+    project = ProjectSerializer()
 
     class Meta:
         model = Ticket

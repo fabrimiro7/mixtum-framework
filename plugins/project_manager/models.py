@@ -21,6 +21,10 @@ class Project(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='project_cliente')
     insert_date = models.DateTimeField(verbose_name="insert_date", auto_now_add=True)
     contributors = models.ManyToManyField(User, related_name='project_contributors', blank=True)
+    hours_quote_min = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    hours_quote_mid = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    hours_quote_max = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    month_cost_limit = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return self.title

@@ -12,5 +12,7 @@ urlpatterns = [
     path('my-client-tickets/', UserClientTicketList.as_view(), name='user-client-tickets'),
 
     path('attachment-tickets/<int:ticket_id>/', TicketAttachment.as_view(), name='attachment-tickets'),
-    path('attachment-message/<int:message_id>/', TicketMessageAttachment.as_view(), name='attachment-message')
+    path('attachment-message/<int:message_id>/', TicketMessageAttachment.as_view(), name='attachment-message'),
+
+    path('monthly-tickets/<int:project_id>/', TicketProjectStatsView.as_view(), name='monthly-tickets'),
 ]

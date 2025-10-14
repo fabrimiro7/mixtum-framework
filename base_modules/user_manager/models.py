@@ -45,7 +45,8 @@ class UserManager(BaseUserManager):
 USER_LEVEL = (
     (100, "SuperAdmin"),
     (50, "Admin"),
-    (1, "Utente"),
+    (10, "Utente"),
+    (5, "Employee"),
 )
 
 USER_TYPE_CHOICES = (
