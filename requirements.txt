@@ -36,3 +36,6 @@ boto3>=1.34
 
 # Images
 Pillow>=10,<12
+
+# Streaming WebSocket
+websocket-client>=1.6.1

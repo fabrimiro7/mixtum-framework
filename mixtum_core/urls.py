@@ -53,6 +53,9 @@ urlpatterns = [
 
     # Workspace
     path('api/workspace/', include('base_modules.workspace.urls')),
+
+    # Cheshire Cat AI Integration
+    path('api/cat/', include(('plugins.ai_integrations.cashirecat.urls', 'cashirecat'), namespace='cashirecat')),
 ]
 
 

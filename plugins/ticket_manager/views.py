@@ -1,6 +1,7 @@
 from base_modules.attachment.serializers import AttachmentCreateSerializer
 from base_modules.mailer.services import send_templated_email
 from base_modules.workspace.models import WorkspaceUser
+from plugins.ticket_manager.permissions import IsWorkspaceMemberOrClientOrAssigneeOrAdmin, can_access_ticket, can_edit_ticket
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import status
@@ -181,78 +182,69 @@ class TicketList(generics.ListCreateAPIView):
         return qs
 
 class TicketDetail(generics.RetrieveUpdateAPIView):
-    if REMOTE_API == True:
+    if REMOTE_API is True:
         authentication_classes = [JWTAuthentication]
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
+    permission_classes = [IsWorkspaceMemberOrClientOrAssigneeOrAdmin]
+
+    def get(self, request, pk):
+        ticket = get_object_or_404(Ticket.objects.select_related("ticket_workspace"), pk=pk)
+        if not can_access_ticket(request.user, ticket):
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        serializer = TicketSerializer(ticket)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        ticket = get_object_or_404(Ticket.objects.select_related("ticket_workspace"), pk=pk)
+        if not can_edit_ticket(request.user, ticket):
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        ticket.delete()
+        return Response({"message": "success"}, status=status.HTTP_200_OK)     
+
+class ToggleTicketPayment(APIView):
+    if REMOTE_API == True:
+        authentication_classes = [JWTAuthentication]
 
     def get(self, request, pk):
         try:
             ticket = Ticket.objects.get(pk=pk)
         except Exception:
             ticket = None
-        if request.user.is_at_least_associate() or ticket.client == request.user:
+        if request.user.is_at_least_associate():
             if ticket:
-                serializer = TicketSerializer(ticket)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                ticket.payments_status = not ticket.payments_status
+                ticket.save()
+                return Response({"message": "success"}, status=status.HTTP_200_OK)
             else:
                 return Response({"message": "fail, ticket non trovato"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
-
-    def delete(self, request, pk):
-        try:
-            ticket = Ticket.objects.get(pk=pk)
-        except Exception:
-            ticket = None
-        if request.user.is_at_least_associate() or ticket.client == request.user:
-            if ticket:
-                ticket.delete()
-                return Response({"message": "success"}, status=status.HTTP_200_OK)
-            return Response({"message": "fail"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
-
 class TicketPutView(APIView):
-    if REMOTE_API == True:
+    if REMOTE_API is True:
         authentication_classes = [JWTAuthentication]
 
     serializer_class = TicketPostSerializer
 
     def get(self, request, pk):
-        try:
-            ticket = Ticket.objects.get(pk=pk)
-        except Exception:
-            ticket = None
-        if request.user.is_at_least_associate() or ticket.client == request.user:
-            if ticket:
-                serializer = TicketPostSerializer(ticket)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response({"message": "fail, ticket non trovato"}, status=status.HTTP_200_OK)
-        else:
+        ticket = get_object_or_404(Ticket.objects.select_related("ticket_workspace"), pk=pk)
+        if not can_access_ticket(request.user, ticket):
             return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
-
+        serializer = TicketPostSerializer(ticket)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        try:
-            ticket = Ticket.objects.get(pk=pk)
-        except Exception:
-            ticket = None
-        if request.user.is_at_least_associate() or ticket.client == request.user:
-            if ticket:
-                serializer = TicketPostSerializer(ticket, data=request.data)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response({"data": serializer.data, "message": "success"}, status=status.HTTP_200_OK)
-                error_list = [serializer.errors[error][0] for error in serializer.errors]
-                print(error_list)
-                return Response({"data": serializer.data, "message": "fail"}, status=status.HTTP_200_OK)
-            return Response({"message": "fail"}, status=status.HTTP_200_OK)
-        else:
+        ticket = get_object_or_404(Ticket.objects.select_related("ticket_workspace"), pk=pk)
+        if not can_edit_ticket(request.user, ticket):
             return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
-
+        serializer = TicketPostSerializer(ticket, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"data": serializer.data, "message": "success"}, status=status.HTTP_200_OK)
+        error_list = [serializer.errors[k][0] for k in serializer.errors]
+        print(error_list)
+        return Response({"data": serializer.errors, "message": "fail"}, status=status.HTTP_400_BAD_REQUEST)
 
 class TicketView(APIView):
     if REMOTE_API == True:

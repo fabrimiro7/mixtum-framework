@@ -11,6 +11,8 @@ urlpatterns = [
     path('my-assigned-tickets/', UserAssignedTicketList.as_view(), name='user-assigned-tickets'),
     path('my-client-tickets/', UserClientTicketList.as_view(), name='user-client-tickets'),
 
+    path('ticket-payments-toggle/<int:pk>/', ToggleTicketPayment.as_view(), name='ticket-payments-toggle'),
+
     path('attachment-tickets/<int:ticket_id>/', TicketAttachment.as_view(), name='attachment-tickets'),
     path('attachment-message/<int:message_id>/', TicketMessageAttachment.as_view(), name='attachment-message'),
 
