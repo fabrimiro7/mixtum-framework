@@ -3,10 +3,13 @@ from base_modules.mailer.services import send_templated_email
 from base_modules.workspace.models import WorkspaceUser
 from plugins.ticket_manager.permissions import IsWorkspaceMemberOrClientOrAssigneeOrAdmin, can_access_ticket, can_edit_ticket
 from rest_framework.response import Response
+from datetime import datetime, time
+from django.db.models import Q, Case, When, IntegerField
 from rest_framework import generics
 from rest_framework import status
 from .models import Ticket, Message
 from base_modules.user_manager.models import User
+from typing import Optional
 from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -37,6 +40,7 @@ class TicketList(generics.ListCreateAPIView):
         "opening_date", "-opening_date",
         "closing_date", "-closing_date",
         "priority", "-priority",
+        "priority_custom", "-priority_custom",
     }
 
     def _parse_date_or_datetime(self, s: str) -> datetime:
@@ -101,6 +105,11 @@ class TicketList(generics.ListCreateAPIView):
         # Filtri Query Params
         # -----------------------------
         params = self.request.query_params
+
+        # mine=true -> solo ticket creati da me o assegnati a me
+        mine_val = params.get("mine")
+        if mine_val == "true":
+            qs = qs.filter(Q(client=user) | Q(assignees=user)).distinct()
 
         # status (singolo)
         status_val = params.get("status")
@@ -174,13 +183,32 @@ class TicketList(generics.ListCreateAPIView):
         # Ordinamento
         # -----------------------------
         ordering = params.get("ordering")
-        if ordering in self.allowed_ordering:
+
+        # Ordinamento custom per priorità: high -> medium -> low
+        if ordering == "priority_custom":
+            priority_case = Case(
+                When(priority="high", then=1),
+                When(priority="medium", then=2),
+                When(priority="low", then=3),
+                default=4,
+                output_field=IntegerField(),
+            )
+            qs = qs.annotate(priority_rank=priority_case).order_by("priority_rank", "-opening_date")
+        elif ordering == "-priority_custom":
+            priority_case = Case(
+                When(priority="high", then=1),
+                When(priority="medium", then=2),
+                When(priority="low", then=3),
+                default=4,
+                output_field=IntegerField(),
+            )
+            qs = qs.annotate(priority_rank=priority_case).order_by("-priority_rank", "-opening_date")
+        elif ordering in self.allowed_ordering:
             qs = qs.order_by(ordering)
         else:
             qs = qs.order_by("-opening_date")
 
         return qs
-
 class TicketDetail(generics.RetrieveUpdateAPIView):
     if REMOTE_API is True:
         authentication_classes = [JWTAuthentication]
