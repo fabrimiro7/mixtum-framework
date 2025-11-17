@@ -93,6 +93,37 @@ class Ticket(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def save(self, *args, **kwargs):
+        """
+        Auto-calcola il costo stimato del ticket in base alla priorità e
+        al costo orario del progetto. Se il ticket è di tipo 'bug', il costo è 0€.
+        """
+        # Se la tipologia è BUG, il costo è sempre zero
+        if self.ticket_type == 'bug':
+            self.cost_estimation = 0
+        else:
+            # Calcolo solo se ci sono minuti e un progetto associato
+            if self.hours_estimation and self.project:
+                # Converti minuti in ore (es: 90 minuti -> 1.5 ore)
+                hours = float(self.hours_estimation) / 60.0
+
+                # Determina il costo orario in base alla priorità
+                hourly_rate = None
+                if self.priority == 'low':
+                    hourly_rate = self.project.hours_quote_min
+                elif self.priority == 'medium':
+                    hourly_rate = self.project.hours_quote_mid
+                elif self.priority == 'high':
+                    hourly_rate = self.project.hours_quote_max
+                else:
+                    hourly_rate = self.project.hours_quote_mid
+
+                # Se il progetto ha il valore richiesto
+                if hourly_rate:
+                    self.cost_estimation = hours * float(hourly_rate)
+
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Ticket'

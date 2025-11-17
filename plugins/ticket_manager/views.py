@@ -209,6 +209,8 @@ class TicketList(generics.ListCreateAPIView):
             qs = qs.order_by("-opening_date")
 
         return qs
+    
+    
 class TicketDetail(generics.RetrieveUpdateAPIView):
     if REMOTE_API is True:
         authentication_classes = [JWTAuthentication]
