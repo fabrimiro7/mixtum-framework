@@ -266,3 +266,27 @@ class GetUserSAAPIView(APIView):
         serializer = UserDetailSerializer(users, many=True)  # Serialize user data
 
         return Response(serializer.data, status=status.HTTP_200_OK)  # Return serialized data
+
+
+class GetUserClientAPIView(APIView):
+    """
+    API view to retrieve a list of users with superadmin or associate permissions.
+
+    This view requires JWT authentication and returns a list of users
+    serialized using the UserDetailSerializer.
+    """
+    serializer_class = UserDetailSerializer  # Serializer to use for response
+
+    if REMOTE_API == True:
+        authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """
+        Retrieve a list of users with superadmin or associate permissions.
+
+        Returns serialized user data as a response with HTTP 200 OK status.
+        """
+        users = User.objects.filter(Q(permission=10) | Q(permission=5))  # Retrieve all users with superadmin or associate permissions
+        serializer = UserDetailSerializer(users, many=True)  # Serialize user data
+
+        return Response(serializer.data, status=status.HTTP_200_OK)  # Return serialized data
