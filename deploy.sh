@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# =========================
-# Config / helpers
-# =========================
-
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 COMPOSE_BASE="${ROOT_DIR}/docker-compose.yml"
@@ -12,34 +8,23 @@ COMPOSE_PROD="${ROOT_DIR}/docker-compose.prod.yml"
 ENV_FILE="${ROOT_DIR}/.env"
 
 log() { echo -e "✅ $*"; }
-warn() { echo -e "⚠️  $*" >&2; }
+warn(){ echo -e "⚠️  $*" >&2; }
 err() { echo -e "❌ $*" >&2; }
-
-require_file() {
-  local f="$1"
-  if [[ ! -f "$f" ]]; then
-    err "Missing required file: $f"
-    exit 1
-  fi
-}
 
 compose() {
   docker compose -f "$COMPOSE_BASE" -f "$COMPOSE_PROD" "$@"
 }
 
-# Naive .env loader (works for simple KEY=VALUE lines)
-load_env() {
-  if [[ -f "$ENV_FILE" ]]; then
-    set -a
-    # shellcheck disable=SC1090
-    source "$ENV_FILE"
-    set +a
-  fi
+require_file() {
+  [[ -f "$1" ]] || { err "Missing file: $1"; exit 1; }
 }
 
-# =========================
-# Pre-flight checks
-# =========================
+load_env() {
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+}
 
 cd "$ROOT_DIR"
 
@@ -49,65 +34,79 @@ require_file "$ENV_FILE"
 require_file "$ROOT_DIR/nginx/init.sh"
 require_file "$ROOT_DIR/nginx/ssl-watch.sh"
 require_file "$ROOT_DIR/certbot/entrypoint.sh"
+require_file "$ROOT_DIR/scripts/entrypoint.sh"
 
 load_env
-
 : "${SERVER_NAME:?SERVER_NAME missing in .env}"
 : "${CERTBOT_EMAIL:?CERTBOT_EMAIL missing in .env}"
 
-# =========================
-# Permissions
-# =========================
-
 log "Setting executable permissions..."
-chmod +x "$ROOT_DIR/nginx/init.sh" \
-         "$ROOT_DIR/nginx/ssl-watch.sh" \
-         "$ROOT_DIR/certbot/entrypoint.sh" \
-         "$ROOT_DIR/scripts/entrypoint.sh" || true
+chmod +x \
+  "$ROOT_DIR/nginx/init.sh" \
+  "$ROOT_DIR/nginx/ssl-watch.sh" \
+  "$ROOT_DIR/certbot/entrypoint.sh" \
+  "$ROOT_DIR/scripts/entrypoint.sh" || true
 
-# Ensure certbot storage exists
 mkdir -p "$ROOT_DIR/letsencrypt_data" "$ROOT_DIR/certbot-www"
 
-# =========================
-# Deploy
-# =========================
+CERT_PATH_HOST="$ROOT_DIR/letsencrypt_data/live/${SERVER_NAME}/fullchain.pem"
+RENEW_CONF_HOST="$ROOT_DIR/letsencrypt_data/renewal/${SERVER_NAME}.conf"
 
 log "Building and starting stack (PROD)..."
 compose up -d --build
 
-log "Waiting for Nginx to be reachable on port 80..."
-# We wait up to ~60s, no hard dependency on curl success (some envs block localhost checks)
-for i in {1..30}; do
+log "Waiting for Nginx on port 80 (best-effort)..."
+for _ in {1..30}; do
   if curl -fsS "http://127.0.0.1/.well-known/acme-challenge/ping" >/dev/null 2>&1; then
     break
   fi
   sleep 2
 done
 
-log "Triggering first certificate issuance (if missing)..."
-# This will do nothing if cert already exists; it runs in addition to the certbot loop.
-# Useful for deterministic "first deploy" results.
-compose run --rm certbot /bin/sh -c '
-  set -eu
-  : "${SERVER_NAME:?}"
-  : "${CERTBOT_EMAIL:?}"
-  CERT_PATH="/etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem"
-  if [ -f "$CERT_PATH" ]; then
-    echo "[deploy] Certificate already present, skipping initial issuance."
-    exit 0
+# --- Renewal config sanity (host-side) ---
+if [[ -f "$RENEW_CONF_HOST" ]]; then
+  # Cheap sanity check: must contain cert/key/chain file references
+  if ! grep -qE '^(cert|privkey|chain|fullchain)\s*=' "$RENEW_CONF_HOST"; then
+    warn "Renewal config looks broken: $RENEW_CONF_HOST"
+    cp "$RENEW_CONF_HOST" "${RENEW_CONF_HOST}.bak.$(date +%Y%m%d_%H%M%S)" || true
+    mv "$RENEW_CONF_HOST" "${RENEW_CONF_HOST}.broken.$(date +%Y%m%d_%H%M%S)" || true
+    warn "Moved broken renewal config aside so it can be regenerated."
   fi
-  echo "[deploy] Issuing certificate for ${SERVER_NAME}..."
-  certbot certonly --webroot -w /var/www/certbot -d "${SERVER_NAME}" \
-    --email "${CERTBOT_EMAIL}" --agree-tos --non-interactive --rsa-key-size 4096
-  touch /var/www/certbot/.nginx-reload
-'
+fi
 
-log "Restarting Nginx to ensure it picks up HTTPS (safe even if watcher already did)..."
+# --- Issue / repair cert (one-shot with explicit entrypoint) ---
+log "Ensuring certificate exists and renewal config is valid..."
+compose run --rm --entrypoint certbot certbot \
+  certonly --webroot -w /var/www/certbot \
+  -d "${SERVER_NAME}" \
+  --email "${CERTBOT_EMAIL}" \
+  --agree-tos --non-interactive \
+  --rsa-key-size 4096 \
+  --keep-until-expiring
+
+# Signal nginx reload (watcher will also pick this up)
+touch "$ROOT_DIR/certbot-www/.nginx-reload" || true
+
+log "Reloading Nginx (safe)..."
 compose exec -T nginx nginx -t
 compose exec -T nginx nginx -s reload || true
+
+log "Starting certbot service (renew loop)..."
+compose up -d certbot
+
+log "Quick dry-run renew test..."
+set +e
+compose run --rm --entrypoint certbot certbot renew --dry-run --webroot -w /var/www/certbot
+DRY_RUN_RC=$?
+set -e
+if [[ $DRY_RUN_RC -ne 0 ]]; then
+  warn "Dry-run renew failed. Check certbot logs:"
+  warn "  docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=200 certbot"
+else
+  log "Dry-run renew OK."
+fi
 
 log "Stack status:"
 compose ps
 
-log "Deployment complete!"
-echo "   👉 https://${SERVER_NAME}"
+log "Deployment complete! 👉 https://${SERVER_NAME}"
