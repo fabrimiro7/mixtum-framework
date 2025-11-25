@@ -29,18 +29,15 @@ services:
   nginx:
     image: nginx:alpine
     container_name: app-nginx-1
-    volumes:
-      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/init.sh:/docker-entrypoint.d/10-init.sh:ro
-      - ./letsencrypt_data:/etc/letsencrypt
-      - ./certbot-www:/var/www/certbot
-    environment:
-      SERVER_NAME: "ticket-admin.efestodev.com"
     depends_on:
       - web
     ports:
       - "80:80"
       - "443:443"
+    # NOTE:
+    # - In DEV this will be overridden by docker-compose.override.yml mounting a static conf.
+    # - In PROD docker-compose.prod.yml will mount scripts + templates for auto-SSL.
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -66,13 +63,5 @@ services:
     ports: ["8080:8080"]
     restart: unless-stopped
 
-  certbot:
-    image: certbot/certbot:latest
-    environment:
-      - SERVER_NAME=${SERVER_NAME}
-      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
-    volumes:
-      - ./letsencrypt_data:/etc/letsencrypt
-      - ./certbot-www:/var/www/certbot
 volumes:
   postgres_data:

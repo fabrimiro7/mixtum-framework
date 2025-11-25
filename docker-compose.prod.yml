@@ -1,0 +1,38 @@
+services:
+  nginx:
+    env_file: [.env]
+    environment:
+      # Disable nginx built-in envsubst templating (we generate config ourselves)
+      NGINX_ENVSUBST_TEMPLATE_DIR: /tmp/no-templates
+      NGINX_ENVSUBST_OUTPUT_DIR: /tmp/not-used
+
+      SERVER_NAME: "${SERVER_NAME}"
+
+    volumes:
+      # Our templates (kept OUT of /etc/nginx/templates on purpose)
+      - ./nginx/default.http.conf.template:/etc/nginx/custom-templates/default.http.conf.template:ro
+      - ./nginx/default.https.conf.template:/etc/nginx/custom-templates/default.https.conf.template:ro
+
+      # Auto-config + auto-switch + reload watcher
+      - ./nginx/init.sh:/docker-entrypoint.d/10-init.sh:ro
+      - ./nginx/ssl-watch.sh:/docker-entrypoint.d/20-ssl-watch.sh:ro
+
+      # Certs + ACME webroot
+      - ./letsencrypt_data:/etc/letsencrypt
+      - ./certbot-www:/var/www/certbot
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+  certbot:
+    image: certbot/certbot:latest
+    env_file: [.env]
+    depends_on:
+      - nginx
+    restart: unless-stopped
+    volumes:
+      - ./letsencrypt_data:/etc/letsencrypt
+      - ./certbot-www:/var/www/certbot
+      - ./certbot/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
