@@ -26,12 +26,6 @@ class ProjectList(generics.ListCreateAPIView):
         return Response({'data': projects_serializer.data}, status=status.HTTP_200_OK)
 
 
-#class ProjectDetail(generics.RetrieveUpdateAPIView):
-#    if REMOTE_API == True:
-#        authentication_classes = [JWTAuthentication]
-#    queryset = Project.objects.all()
-#    serializer_class = ProjectSerializer
-
 class ProjectDetail(generics.RetrieveUpdateAPIView):
     if REMOTE_API == True:
         authentication_classes = [JWTAuthentication]

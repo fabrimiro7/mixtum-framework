@@ -17,4 +17,6 @@ urlpatterns = [
     path('attachment-message/<int:message_id>/', TicketMessageAttachment.as_view(), name='attachment-message'),
 
     path('monthly-tickets/<int:project_id>/', TicketProjectStatsView.as_view(), name='monthly-tickets'),
+    path('tasks/', ProjectTaskList.as_view(), name='project-tasks'),
+    path('tasks/<int:pk>/', TaskUpdateView.as_view(), name='task-update'),
 ]

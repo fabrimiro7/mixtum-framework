@@ -175,6 +175,7 @@ class Task(models.Model):
         max_length=10, choices=PRIORITY_CHOICES, default='medium', db_index=True
     )
     estimate_hours = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
     parent = models.ForeignKey(
         'self', on_delete=models.CASCADE, related_name='children',

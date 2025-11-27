@@ -7,10 +7,11 @@ from datetime import datetime, time
 from django.db.models import Q, Case, When, IntegerField
 from rest_framework import generics
 from rest_framework import status
-from .models import Ticket, Message
+from .models import Ticket, Message, Task, TASK_STATUS_CHOICES
+from plugins.project_manager.models import Project
 from base_modules.user_manager.models import User
 from typing import Optional
-from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer
+from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer, TaskSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from mixtum_core.settings.base import REMOTE_API
@@ -613,3 +614,104 @@ class TicketProjectStatsView(APIView):
             },
             "results": results
         }, status=status.HTTP_200_OK)
+
+
+class ProjectTaskList(APIView):
+    if REMOTE_API and JWTAuthentication is not None:
+        authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        project_id = request.query_params.get('project')
+        if not project_id:
+            return Response({"detail": "Parametro 'project' obbligatorio."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            project = Project.objects.select_related('client').get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response({"detail": "Progetto non trovato."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        if hasattr(user, "is_at_least_associate") and callable(user.is_at_least_associate) and user.is_at_least_associate():
+            pass
+        elif project.client_id == getattr(user, "id", None):
+            pass
+        else:
+            return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        tasks = Task.objects.filter(project_id=project_id).select_related('assignee')
+        serializer = TaskSerializer(tasks, many=True)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+
+class TaskUpdateView(APIView):
+    if REMOTE_API and JWTAuthentication is not None:
+        authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            task = Task.objects.select_related('project__client').get(pk=pk)
+        except Task.DoesNotExist:
+            return Response({"detail": "Task non trovato."}, status=status.HTTP_404_NOT_FOUND)
+
+        new_status = request.data.get('status')
+        new_start = request.data.get('start_date')
+        new_due = request.data.get('due_date')
+
+        if not any([new_status, new_start, new_due]):
+            return Response({"detail": "Nessun campo valido fornito."}, status=status.HTTP_400_BAD_REQUEST)
+
+        updates = {}
+
+        if new_status is not None:
+            valid_status = {choice[0] for choice in TASK_STATUS_CHOICES}
+            if new_status not in valid_status:
+                return Response({"detail": "Status non valido."}, status=status.HTTP_400_BAD_REQUEST)
+            updates['status'] = new_status
+
+        from datetime import datetime
+
+        def parse_date(value, field_name):
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").date()
+            except Exception:
+                raise ValueError(f"Formato data non valido per {field_name}.")
+
+        if new_start is not None:
+            try:
+                updates['start_date'] = parse_date(new_start, 'start_date')
+            except ValueError as exc:
+                return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_due is not None:
+            try:
+                updates['due_date'] = parse_date(new_due, 'due_date')
+            except ValueError as exc:
+                return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if hasattr(user, "is_at_least_associate") and callable(user.is_at_least_associate) and user.is_at_least_associate():
+            pass
+        elif task.project.client_id == getattr(user, "id", None):
+            pass
+        elif task.assignee_id == getattr(user, "id", None):
+            pass
+        else:
+            return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        if 'start_date' in updates and 'due_date' in updates:
+            if updates['due_date'] < updates['start_date']:
+                return Response({"detail": "La data di fine non può precedere la data di inizio."}, status=status.HTTP_400_BAD_REQUEST)
+        elif 'start_date' in updates and task.due_date and task.due_date < updates['start_date']:
+            return Response({"detail": "La data di fine non può precedere la data di inizio."}, status=status.HTTP_400_BAD_REQUEST)
+        elif 'due_date' in updates and task.start_date and updates['due_date'] < task.start_date:
+            return Response({"detail": "La data di fine non può precedere la data di inizio."}, status=status.HTTP_400_BAD_REQUEST)
+
+        for field, value in updates.items():
+            setattr(task, field, value)
+
+        update_fields = list(updates.keys()) + ['updated_at']
+        task.save(update_fields=update_fields)
+        serializer = TaskSerializer(task)
+        return Response(serializer.data, status=status.HTTP_200_OK)

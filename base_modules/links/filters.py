@@ -1,6 +1,7 @@
 import django_filters
 from django.contrib.contenttypes.models import ContentType
-from base_modules.links import models
+from django.db import models
+from .models import Link
 
 
 class LinkFilter(django_filters.FilterSet):

@@ -33,6 +33,9 @@ urlpatterns = [
     # Attachments
     path('api/attachments/', include(('base_modules.attachment.urls', 'attachment'), namespace='attachment')),
 
+    # Links
+    path('api/links/', include(('base_modules.links.urls', 'links'), namespace='links')),
+
     # Ticket Manager
     path('api/ticket_manager/', include(('plugins.ticket_manager.urls', 'ticket_manager'), namespace='ticket_manager')),
 

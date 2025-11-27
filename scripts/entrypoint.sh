@@ -14,14 +14,18 @@ wait_for_pg() {
 }
 
 has_module() {
-  python - <<'PY'
+  local module="${1:-}"
+  python - "$module" <<'PY'
 import importlib, sys
-mod = sys.argv[1]
-try:
-    importlib.import_module(mod)
-    print("YES")
-except Exception:
+if len(sys.argv) < 2 or not sys.argv[1]:
     print("NO")
+else:
+    mod = sys.argv[1]
+    try:
+        importlib.import_module(mod)
+        print("YES")
+    except Exception:
+        print("NO")
 PY
 }
 
@@ -41,7 +45,7 @@ case "$ROLE" in
   dev)
     # Sviluppo: autoreload affidabile anche su bind mount (Docker Desktop)
     python manage.py migrate --noinput
-    if [[ "$(has_module watchdog)" == "YES" ]]; then
+    if [[ "$(has_module watchdog.cli.watchmedo)" == "YES" ]]; then
       echo "Running DEV with watchdog auto-restart"
       exec python -m watchdog.cli.watchmedo auto-restart \
         --directory=/app \
@@ -61,7 +65,7 @@ case "$ROLE" in
       echo "Starting Celery worker with --autoreload"
       # --pool=solo consigliato con autoreload
       exec celery -A mixtum_core worker --loglevel=${CELERY_LOG_LEVEL:-INFO} --pool=solo --autoreload
-    elif [[ "$(has_module watchdog)" == "YES" ]]; then
+    elif [[ "$(has_module watchdog.cli.watchmedo)" == "YES" ]]; then
       echo "Starting Celery worker wrapped by watchdog auto-restart"
       exec python -m watchdog.cli.watchmedo auto-restart \
         --directory=/app \
@@ -76,7 +80,7 @@ case "$ROLE" in
 
   beat)
     # Celery beat: nessun autoreload nativo; wrapper watchdog se vuoi anche qui
-    if [[ "$(has_module watchdog)" == "YES" ]]; then
+    if [[ "$(has_module watchdog.cli.watchmedo)" == "YES" ]]; then
       echo "Starting Celery beat wrapped by watchdog auto-restart"
       exec python -m watchdog.cli.watchmedo auto-restart \
         --directory=/app \
