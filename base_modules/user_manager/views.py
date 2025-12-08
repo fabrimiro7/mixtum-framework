@@ -63,7 +63,6 @@ class LoginUserView(CreateAPIView):
                 {"detail": "Use Keycloak login (OIDC) and pass Bearer token."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        print("ciao sono quii")
         email = request.data.get("email")
         password = request.data.get("password")
 
