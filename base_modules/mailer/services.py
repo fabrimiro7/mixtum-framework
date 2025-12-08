@@ -1,4 +1,5 @@
 from typing import Iterable, Optional, Dict, Any, List, Union
+from email.utils import formataddr
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template import Template, Context
 from django.utils import timezone
@@ -11,6 +12,14 @@ def _render_from_template(subject_tmpl: str, html_tmpl: str, text_tmpl: str, con
     html = Template(html_tmpl).render(ctx)
     text = Template(text_tmpl).render(ctx).strip() if text_tmpl else ""
     return subj, text, html
+
+
+def _get_from_address(email: EmailModel, from_name: Optional[str] = None) -> str:
+    base_email = email.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "")
+    if not base_email:
+        return ""
+    display_name = from_name or getattr(settings, "DEFAULT_FROM_DISPLAY_NAME", "")
+    return formataddr((display_name, base_email)) if display_name else base_email
 
 def render_email_instance(email: EmailModel) -> EmailModel:
     """
@@ -35,10 +44,12 @@ def send_email(
     context_override: Optional[dict] = None,
     fail_silently: bool = False,
     connection_kwargs: Optional[dict] = None,
+    from_name: Optional[str] = None,
 ) -> bool:
     """
     Invia una Email (istanza o id) usando EmailMultiAlternatives.
     Aggiorna status/sent_at/retries/last_error.
+    Puoi forzare un `from_name` per mostrare un nome diverso dall'indirizzo.
     Ritorna True/False.
     """
     if isinstance(email, int):
@@ -49,7 +60,7 @@ def send_email(
 
     render_email_instance(email)
 
-    from_email = email.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None)
+    from_email = _get_from_address(email, from_name)
     msg = EmailMultiAlternatives(
         subject=email.subject or "",
         body=email.body_text or "",
@@ -97,6 +108,7 @@ def send_templated_email(
     context: Dict[str, Any],
     subject_override: Optional[str] = None,
     from_email: Optional[str] = None,
+    from_name: Optional[str] = None,
     cc: Optional[List[str]] = None,
     bcc: Optional[List[str]] = None,
     attachments: Optional[List[tuple]] = None,
@@ -106,6 +118,7 @@ def send_templated_email(
     Scorciatoia per creare + inviare una mail a partire da un template.
     attachments: lista di tuple (filename, content_bytes, mimetype)
     Ritorna l'istanza Email salvata.
+    `from_name` ti permette di personalizzare il nome visualizzato per questa mail.
     """
     tmpl = EmailTemplate.objects.get(slug=template_slug)
     email = EmailModel.objects.create(
@@ -132,5 +145,5 @@ def send_templated_email(
             )
 
     # invia subito (puoi delegare a Celery se vuoi)
-    send_email(email, fail_silently=fail_silently)
+    send_email(email, fail_silently=fail_silently, from_name=from_name)
     return email

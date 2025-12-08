@@ -15,3 +15,4 @@ EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "0") in ("1", "true", "True")
 if EMAIL_USE_SSL:
     EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "no-reply@example.com")
+DEFAULT_FROM_DISPLAY_NAME = os.getenv("DEFAULT_FROM_DISPLAY_NAME", "")

@@ -210,8 +210,7 @@ class TicketList(generics.ListCreateAPIView):
             qs = qs.order_by("-opening_date")
 
         return qs
-    
-    
+        
 class TicketDetail(generics.RetrieveUpdateAPIView):
     if REMOTE_API is True:
         authentication_classes = [JWTAuthentication]
@@ -396,6 +395,8 @@ class TicketMessages(generics.ListCreateAPIView):
         request_data['ticket'] = ticket_id
         request_data['author'] = request.user.id
         message_serializer = MessageSerializer(data=request_data)
+        if message_serializer.is_valid():
+            message_serializer.save()
         try:
             ticket = Ticket.objects.get(id=ticket_id)
             if ticket:
@@ -406,8 +407,6 @@ class TicketMessages(generics.ListCreateAPIView):
                 )
         except Exception as e:
             print("Errore invio email:", str(e))
-        if message_serializer.is_valid():
-            message_serializer.save()
             return Response({"data": message_serializer.data, "message": "success"}, status=status.HTTP_201_CREATED)
         return Response({"data": message_serializer.errors, "message": "fail"}, status=status.HTTP_400_BAD_REQUEST)
 
