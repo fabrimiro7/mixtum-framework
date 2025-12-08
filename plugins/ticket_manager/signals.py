@@ -32,10 +32,11 @@ def _get_ticket_context(ticket: Ticket) -> Dict[str, Dict[str, Optional[str]]]:
     }
 
 
-def _get_ticket_recipients(ticket: Ticket) -> List[str]:
+def _get_ticket_recipients(ticket: Ticket, client_email: bool = True) -> List[str]:
     recipients = set()
-    if ticket.client and ticket.client.email:
-        recipients.add(ticket.client.email)
+    if client_email:
+        if ticket.client and ticket.client.email:
+            recipients.add(ticket.client.email)
     assignees_qs = ticket.assignees.exclude(email__isnull=True).exclude(email__exact="")
     recipients.update(assignees_qs.values_list("email", flat=True))
     return list(recipients)
@@ -93,7 +94,7 @@ def _ticket_post_save(sender, instance, created, **kwargs):
 def _ticket_assignees_changed(sender, instance, action, pk_set, **kwargs):
     if action not in ("post_add", "post_remove", "post_clear"):
         return
-    recipients = _get_ticket_recipients(instance)
+    recipients = _get_ticket_recipients(instance, client_email=False)
     context = _get_ticket_context(instance)
     context["assignee_action"] = action
     if pk_set:
