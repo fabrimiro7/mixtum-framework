@@ -24,6 +24,8 @@ TYPE_TICKET = (
     ('bug', 'Bug'),
     ('feature', 'Feature'),
     ('evo', 'Evolutiva'),
+    ('check', 'Check'),
+    ('aggiornamento', 'Aggiornamento'),
 )
 
 TASK_STATUS_CHOICES = (

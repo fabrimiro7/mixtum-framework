@@ -51,6 +51,9 @@ urlpatterns = [
     # Project manager
     path('api/project_manager/', include(('plugins.project_manager.urls', 'project'), namespace='project')),
 
+    # Sprint manager
+    path('api/sprint_manager/', include(('plugins.sprint_manager.urls', 'sprint_manager'), namespace='sprint_manager')),
+
     # Report manager
     path('api/report_manager/', include(('plugins.report.urls', 'report'), namespace='report')),
 
