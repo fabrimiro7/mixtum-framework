@@ -407,8 +407,8 @@ class TicketMessages(generics.ListCreateAPIView):
                 )
         except Exception as e:
             print("Errore invio email:", str(e))
-            return Response({"data": message_serializer.data, "message": "success"}, status=status.HTTP_201_CREATED)
-        return Response({"data": message_serializer.errors, "message": "fail"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"data": message_serializer.errors, "message": "fail"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"data": message_serializer.data, "message": "success"}, status=status.HTTP_201_CREATED)
 
 
 
