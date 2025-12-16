@@ -7,18 +7,18 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import Email as EmailModel, EmailStatus
-from .services import send_email
+from .services import send_email_now  
 
 
 @shared_task
 def enqueue_due_emails(batch_size: int = 200) -> int:
     """
-    Dispatcher: prende le email dovute e le mette in lavorazione.
-    - Seleziona Email QUEUED non inviate e "due" (scheduled_at NULL o <= now)
-    - Le "prenota" (QUEUED -> SENDING) in modo atomico per evitare doppioni
-    - Enqueue di send_email_task(email_id)
+    Dispatcher: picks due emails and puts them in processing.
+    - Selects QUEUED emails not sent and due (scheduled_at NULL or <= now)
+    - Atomically claims them (QUEUED -> SENDING) to avoid duplicates
+    - Enqueues send_email_task(email_id)
 
-    Ritorna il numero di email enqueued.
+    Returns the number of emails enqueued.
     """
     now = timezone.now()
 
@@ -34,7 +34,6 @@ def enqueue_due_emails(batch_size: int = 200) -> int:
 
     enqueued = 0
     for email_id in ids:
-        # Claim atomico (evita che due dispatcher/worker prendano la stessa email)
         updated = EmailModel.objects.filter(
             pk=email_id,
             status=EmailStatus.QUEUED,
@@ -51,18 +50,18 @@ def enqueue_due_emails(batch_size: int = 200) -> int:
 @shared_task(bind=True, max_retries=5, default_retry_delay=60)
 def send_email_task(self, email_id: int) -> None:
     """
-    Invia una singola Email usando il tuo service.send_email.
+    Sends a single Email using services.send_email_now (real SMTP send).
 
-    Regole:
-    - Idempotenza: se già sent_at valorizzato -> exit
-    - Se non è in SENDING (o QUEUED in casi di recovery), non la tocca
-    - In caso di errore:
-        - se Celery ritenterà -> status torna a QUEUED (così è "retryable" e coerente a DB)
-        - se retry esauriti -> status resta FAILED (lasciato dal service)
+    Rules:
+    - Idempotent: if already sent_at -> exit
+    - If not in SENDING (or QUEUED for manual recovery), it won't touch it
+    - On error:
+        - if Celery will retry -> status back to QUEUED
+        - if retries exhausted -> leave FAILED (set by the service)
     """
     now = timezone.now()
 
-    # 1) Pre-check + lock riga
+    # 1) Pre-check + row lock
     with transaction.atomic():
         try:
             email_obj = EmailModel.objects.select_for_update().get(pk=email_id)
@@ -72,36 +71,28 @@ def send_email_task(self, email_id: int) -> None:
         if email_obj.sent_at:
             return
 
-        # Non inviare se non eleggibile
         if email_obj.status in (EmailStatus.DRAFT, EmailStatus.SENT):
             return
 
-        # Scheduled in futuro: rimetto QUEUED e stop (non è un errore)
         if email_obj.scheduled_at and email_obj.scheduled_at > now:
             if email_obj.status != EmailStatus.QUEUED:
                 email_obj.status = EmailStatus.QUEUED
                 email_obj.save(update_fields=["status", "updated_at"])
             return
 
-        # Se non è SENDING, evita invii “fuori flusso”
-        # (consente comunque QUEUED in scenari di recovery manuale)
         if email_obj.status not in (EmailStatus.SENDING, EmailStatus.QUEUED):
             return
 
-        # Normalizza a SENDING prima di inviare
         if email_obj.status != EmailStatus.SENDING:
             email_obj.status = EmailStatus.SENDING
             email_obj.save(update_fields=["status", "updated_at"])
 
-    # 2) Invio fuori transazione (I/O)
+    # 2) Send outside transaction (I/O)
     try:
-        # Usiamo fail_silently=False per far emergere l'eccezione e usare retry Celery
-        # Nota: il tuo service salva già status=SENT/FAILED e sent_at/last_error.
-        send_email(email_id, fail_silently=False)
+        # IMPORTANT: call the real sender, not the enqueue-only API
+        send_email_now(email_id, fail_silently=False)
 
     except Exception as exc:
-        # 3) Se Celery ritenterà, non voglio lasciare FAILED "temporaneo":
-        # riporto a QUEUED (ma conservando last_error già scritto dal service).
         will_retry = self.request.retries < self.max_retries
 
         if will_retry:
@@ -111,15 +102,12 @@ def send_email_task(self, email_id: int) -> None:
                 except EmailModel.DoesNotExist:
                     return
 
-                # Se qualcuno l'ha già segnata come inviata nel frattempo, stop
                 if email_obj.sent_at:
                     return
 
-                # Ri-queue: l'email è fallita, ma è ancora retryable
                 email_obj.status = EmailStatus.QUEUED
                 email_obj.save(update_fields=["status", "updated_at"])
 
             raise self.retry(exc=exc)
 
-        # Retry esauriti: lasciamo FAILED (già impostato dal service) e usciamo
         return
