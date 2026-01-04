@@ -76,10 +76,14 @@ services:
       MB_DB_PASS: metabase_password
       MB_DB_HOST: metabase_db
 
+      # Reverse proxy config
+      MB_SITE_URL: "https://${SERVER_NAME}/metabase"
+      MB_SITE_LOCALE: "it"
+
       # Tuning prudente per macchine piccole
       JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     restart: unless-stopped
 
   metabase_db:

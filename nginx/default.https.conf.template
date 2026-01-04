@@ -35,6 +35,25 @@ server {
 
   location = / { return 301 https://$host/admin/; }
 
+  # Metabase (HTTPS) - base path /metabase/
+  location /metabase/ {
+    proxy_pass http://metabase:3000/;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $host;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+
+  # Optional: redirect /metabase -> /metabase/
+  location = /metabase {
+    return 301 /metabase/;
+  }
+
   location / {
     proxy_pass http://web:8000;
 
