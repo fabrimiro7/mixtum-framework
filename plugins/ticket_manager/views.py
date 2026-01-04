@@ -112,6 +112,28 @@ class TicketList(generics.ListCreateAPIView):
         if mine_val == "true":
             qs = qs.filter(Q(client=user) | Q(assignees=user)).distinct()
 
+        owner_val = params.get("owner")
+        if owner_val:
+            try:
+                owner_id = int(owner_val)
+            except (TypeError, ValueError):
+                raise ValidationError({"owner": "Owner ID non valido"})
+            qs = qs.filter(client_id=owner_id)
+
+        workspace_open = params.get("workspace_open")
+        if workspace_open == "true":
+            workspace_ids = WorkspaceUser.objects.filter(
+                user=user
+            ).values_list("workspace_id", flat=True)
+            other_user_ids = WorkspaceUser.objects.filter(
+                workspace_id__in=workspace_ids
+            ).exclude(user=user).values_list("user_id", flat=True)
+
+            if not other_user_ids:
+                return Ticket.objects.none()
+
+            qs = qs.filter(client_id__in=other_user_ids, status="open")
+
         # status (singolo)
         status_val = params.get("status")
         if status_val:

@@ -34,9 +34,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    # NOTE:
-    # - In DEV this will be overridden by docker-compose.override.yml mounting a static conf.
-    # - In PROD docker-compose.prod.yml will mount scripts + templates for auto-SSL.
     restart: unless-stopped
 
   redis:
@@ -63,5 +60,38 @@ services:
     ports: ["8080:8080"]
     restart: unless-stopped
 
+  # -------------------------
+  # Metabase + DB dedicato
+  # -------------------------
+  metabase:
+    image: metabase/metabase:latest
+    depends_on:
+      - metabase_db
+      - db
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: metabase
+      MB_DB_PASS: metabase_password
+      MB_DB_HOST: metabase_db
+
+      # Tuning prudente per macchine piccole
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  metabase_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: metabase
+      POSTGRES_USER: metabase
+      POSTGRES_PASSWORD: metabase_password
+    volumes:
+      - metabase_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  metabase_data:

@@ -21,6 +21,8 @@ server {
 
   server_name ${SERVER_NAME};
 
+  client_max_body_size 50M;
+  
   ssl_certificate     /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem;
   ssl_session_timeout 1d;

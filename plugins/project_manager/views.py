@@ -8,6 +8,19 @@ from rest_framework.views import APIView
 from mixtum_core.settings.base import REMOTE_API
 from base_modules.user_manager.authentication import JWTAuthentication
 
+from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
+
+
+def _accessible_project_ids_for(user):
+    if user.is_superadmin() or user.is_admin():
+        return set(Project.objects.values_list('id', flat=True))
+
+    ids = set(Project.objects.filter(client=user).values_list('id', flat=True))
+    for project in Project.objects.exclude(id__in=ids):
+        if requester_shares_workspace_with_project_client(project.id, user.id):
+            ids.add(project.id)
+    return ids
+
 
 class ProjectList(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
@@ -18,10 +31,14 @@ class ProjectList(generics.ListCreateAPIView):
         return Project.objects.all()
 
     def get(self, request):
-        if request.user.is_superadmin():
+        if request.user.is_superadmin() or request.user.is_admin():
             projects = Project.objects.all()
         else:
-            projects = Project.objects.filter(client=request.user)
+            accessible_project_ids = _accessible_project_ids_for(request.user)
+            if accessible_project_ids:
+                projects = Project.objects.filter(id__in=accessible_project_ids)
+            else:
+                projects = Project.objects.filter(client=request.user)
         projects_serializer = ProjectSerializerGet(projects, many=True)
         return Response({'data': projects_serializer.data}, status=status.HTTP_200_OK)
 
@@ -44,8 +61,9 @@ class ProjectDetail(generics.RetrieveUpdateAPIView):
             else:
                 return Response({"message": "fail"}, status=status.HTTP_200_OK)
         else:
-            project = Project.objects.get(pk=pk, client=request.user)
-            if project:
+            accessible_project_ids = _accessible_project_ids_for(request.user)
+            if pk in accessible_project_ids:
+                project = Project.objects.get(pk=pk)
                 serializer = ProjectSerializerGet(project)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)

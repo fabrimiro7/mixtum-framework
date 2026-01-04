@@ -12,6 +12,23 @@ from base_modules.user_manager.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 
+from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
+
+
+def _accessible_project_ids_for(user):
+    if user.permission in (100, 50):
+        return set(Project.objects.values_list('id', flat=True))
+
+    ids = set()
+    if user.permission == 1:
+        ids.update(Project.objects.filter(client=user).values_list('id', flat=True))
+
+    for project in Project.objects.exclude(id__in=ids):
+        if requester_shares_workspace_with_project_client(project.id, user.id):
+            ids.add(project.id)
+
+    return ids
+
 
 
 class TutorialList(generics.ListCreateAPIView):
@@ -22,15 +39,14 @@ class TutorialList(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
 
-        if user.permission == 100 or user.permission == 50:  
+        if user.permission in (100, 50):
             return Tutorial.objects.all().distinct()
 
-        elif user.permission == 1:  # Utente
-            # Usa il related_name 'cliente' per accedere ai progetti dell'utente
-            user_projects = Project.objects.filter(client=user)
-            return Tutorial.objects.filter(projects__in=user_projects).distinct()
+        accessible_project_ids = _accessible_project_ids_for(user)
+        if not accessible_project_ids:
+            return Tutorial.objects.none()
 
-        return Tutorial.objects.none()
+        return Tutorial.objects.filter(projects__id__in=accessible_project_ids).distinct()
 
 class TutorialByProjectView(APIView):
     if REMOTE_API == True:
@@ -59,16 +75,14 @@ class TutorialDetail(generics.RetrieveUpdateAPIView):
         if request.user.is_superadmin() or request.user.is_admin():  # SuperAdmin o Admin
             serializer = TutorialFullSerializer(tutorial)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        elif request.user.is_user() == 1:  # Utente
-            # Filtra i progetti associati al tutorial per verificare se uno di essi ha l'utente come cliente
-            user_projects = tutorial.projects.filter(client=request.user)
-            
-            if user_projects.exists():  # Se l'utente è cliente di almeno un progetto associato al tutorial
-                serializer = TutorialFullSerializer(tutorial)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        accessible_project_ids = _accessible_project_ids_for(request.user)
+        if not accessible_project_ids:
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        if tutorial.projects.filter(id__in=accessible_project_ids).exists():
+            serializer = TutorialFullSerializer(tutorial)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
 

@@ -1,4 +1,5 @@
 # permissions.py (nuovo modulo, oppure in views.py se preferisci)
+from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.db.models import Q
 from base_modules.workspace.models import WorkspaceUser
@@ -18,7 +19,7 @@ def can_access_ticket(user, ticket):
     if is_superadmin(user):
         return True
     ws_ids = get_user_workspace_ids(user)
-    in_same_ws = ticket.ticket_workspace_id in ws_ids if ticket.ticket_workspace_id else False
+    in_same_ws = requester_shares_workspace_with_project_client(ticket.project_id, user.id) or (ticket.ticket_workspace_id in ws_ids)
     is_client = (ticket.client_id == user.id)
     is_assignee = ticket.assignees.filter(id=user.id).exists()
     if is_associate(user):

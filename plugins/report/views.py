@@ -3,30 +3,18 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from plugins.project_manager.models import Project
+from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
+
 from .models import Report
 from .serializers import ReportSerializer
 
-ROLE_LABELS = {
-    100: 'SuperAdmin',
-    50: 'Admin',
-    10: 'Utente',
-    5: 'Employee',
-    1: 'Utente',
-}
 
-
-def _get_role_label(user):
-    permission_value = getattr(user, 'permission', None)
-    return ROLE_LABELS.get(permission_value, 'Utente')
-
-
-def _filter_queryset_by_role(queryset, user):
-    if not user or not getattr(user, 'is_authenticated', False):
-        return queryset.none()
-    if user.is_at_least_associate():
-        return queryset
-    role_label = _get_role_label(user)
-    return queryset.filter(visible_roles__contains=[role_label])
+def _resolve_report_project_id(report: Report):
+    if report.report_project_id:
+        return report.report_project_id
+    ticket = getattr(report, 'report_ticket', None)
+    return getattr(ticket, 'project_id', None) if ticket else None
 
 
 def _user_can_view_report(user, report):
@@ -34,11 +22,14 @@ def _user_can_view_report(user, report):
         return False
     if user.is_at_least_associate():
         return True
-    if report.report_ticket and report.report_ticket.client == user:
+    if report.report_ticket and report.report_ticket.client_id == user.id:
         return True
-    role_label = _get_role_label(user)
-    visible_roles = report.visible_roles or []
-    return role_label in visible_roles
+    if report.report_project and report.report_project.client_id == user.id:
+        return True
+    project_id = _resolve_report_project_id(report)
+    if project_id and requester_shares_workspace_with_project_client(project_id, user.id):
+        return True
+    return False
 
 
 def _user_can_modify_report(user, report):
@@ -46,7 +37,7 @@ def _user_can_modify_report(user, report):
         return False
     if user.is_at_least_associate():
         return True
-    return report.report_ticket and report.report_ticket.client == user
+    return report.report_ticket and report.report_ticket.client_id == user.id
 
 
 class AllReportAPIView(APIView):
@@ -71,8 +62,16 @@ class ProjectReportListAPIView(APIView):
     serializer_class = ReportSerializer
 
     def get(self, request, project):
-        reports = Report.objects.filter(report_project_id=project)
-        reports = _filter_queryset_by_role(reports, request.user)
+        user = request.user
+        if not getattr(user, 'is_authenticated', False):
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        project_obj = get_object_or_404(Project, pk=project)
+        if not user.is_at_least_associate():
+            if project_obj.client_id != user.id and not requester_shares_workspace_with_project_client(project_obj.id, user.id):
+                return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        reports = Report.objects.filter(report_project_id=project_obj.id)
         serializer = ReportSerializer(reports, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
