@@ -2,6 +2,7 @@ from base_modules.attachment.serializers import AttachmentCreateSerializer
 from base_modules.mailer.services import send_templated_email
 from base_modules.workspace.models import WorkspaceUser
 from plugins.ticket_manager.permissions import IsWorkspaceMemberOrClientOrAssigneeOrAdmin, can_access_ticket, can_edit_ticket
+from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
 from rest_framework.response import Response
 from datetime import datetime, time
 from django.db.models import Q, Case, When, IntegerField
@@ -78,7 +79,50 @@ class TicketList(generics.ListCreateAPIView):
         )
 
         # -----------------------------
-        # Permessi/Visibilità
+        # Filtri Query Params
+        # -----------------------------
+        params = self.request.query_params
+
+        # -----------------------------
+        # Gestione speciale per filtro project: verifica visibilità basata su client del progetto
+        # -----------------------------
+        project = params.get("project")
+        if project:
+            try:
+                project_id = int(project)
+            except (TypeError, ValueError):
+                raise ValidationError({"project": "Project ID non valido"})
+
+            # Verifica se l'utente può accedere al progetto
+            can_access = False
+            if hasattr(user, "is_superadmin") and callable(user.is_superadmin) and user.is_superadmin():
+                # SuperAdmin può vedere tutto
+                can_access = True
+            else:
+                # Verifica se è il client del progetto
+                try:
+                    project_obj = Project.objects.only('client_id').get(id=project_id)
+                    if project_obj.client_id == user.id:
+                        can_access = True
+                    else:
+                        # Verifica se condivide il workspace con il client del progetto
+                        can_access = requester_shares_workspace_with_project_client(project_id, user.id)
+                except Project.DoesNotExist:
+                    raise ValidationError({"project": "Progetto non trovato"})
+
+            if not can_access:
+                # L'utente non può accedere al progetto, restituisce queryset vuoto
+                return Ticket.objects.none()
+
+            # L'utente può accedere al progetto: mostra tutti i ticket del progetto
+            # indipendentemente dal client del ticket
+            qs = qs.filter(project_id=project_id)
+            # Non applicare il filtro di visibilità standard quando si filtra per project
+            # perché la visibilità è già verificata basandosi sul client del progetto
+            return self._apply_other_filters(qs, params, user)
+
+        # -----------------------------
+        # Permessi/Visibilità (solo se non si sta filtrando per project)
         # -----------------------------
         if hasattr(user, "is_superadmin") and callable(user.is_superadmin) and user.is_superadmin():
             # SuperAdmin: vede tutto
@@ -102,10 +146,9 @@ class TicketList(generics.ListCreateAPIView):
                 Q(client_id__in=users_in_same_ws_ids)
             ).distinct()
 
-        # -----------------------------
-        # Filtri Query Params
-        # -----------------------------
-        params = self.request.query_params
+        return self._apply_other_filters(qs, params, user)
+
+    def _apply_other_filters(self, qs, params, user):
 
         # mine=true -> solo ticket creati da me o assegnati a me
         mine_val = params.get("mine")
@@ -132,7 +175,9 @@ class TicketList(generics.ListCreateAPIView):
             if not other_user_ids:
                 return Ticket.objects.none()
 
-            qs = qs.filter(client_id__in=other_user_ids, status="open")
+            # Filtra solo per client nel workspace, senza vincolare lo stato
+            # Il filtro status verrà applicato dopo se presente nei params
+            qs = qs.filter(client_id__in=other_user_ids)
 
         # status (singolo)
         status_val = params.get("status")
@@ -157,11 +202,6 @@ class TicketList(generics.ListCreateAPIView):
         priority = params.get("priority")
         if priority:
             qs = qs.filter(priority=priority)
-
-        # project (ID)
-        project = params.get("project")
-        if project:
-            qs = qs.filter(project_id=project)
 
         # search (su titolo/descrizione)
         search = params.get("search")
