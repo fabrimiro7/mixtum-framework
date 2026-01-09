@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import status
+from django.db.models import Q
 from .models import Project
 from .serializers import ProjectSerializer, ProjectSerializerGet
 from rest_framework.permissions import IsAuthenticated
@@ -133,7 +134,9 @@ class ProjectFromUser(generics.RetrieveUpdateAPIView):
             if request.user.permission == 100:
                 projects = Project.objects.all()
             else:
-                projects = Project.objects.filter(client=pk)
+                projects = Project.objects.filter(
+                    Q(client=pk) | Q(contributors=pk)
+                ).distinct()
         except Exception:
             projects = None
         if projects:
