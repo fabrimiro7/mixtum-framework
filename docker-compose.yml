@@ -88,6 +88,11 @@ services:
 
   metabase_db:
     image: postgres:16-alpine
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1g
     environment:
       POSTGRES_DB: metabase
       POSTGRES_USER: metabase

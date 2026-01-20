@@ -11,6 +11,29 @@ from .models import Ticket
 logger = logging.getLogger(__name__)
 
 
+def _get_status_display_message(status: Optional[str]) -> str:
+    """
+    Converte un valore tecnico di stato in un messaggio user-friendly in italiano.
+    
+    Args:
+        status: Valore tecnico dello stato (es. 'in_progress', 'resolved')
+    
+    Returns:
+        Messaggio user-friendly in italiano, o il valore originale se non riconosciuto
+    """
+    if not status:
+        return status or ""
+    
+    status_mapping = {
+        'open': 'Il ticket è stato aperto',
+        'in_progress': 'Ticket preso in carico',
+        'resolved': 'Il ticket è stato risolto',
+        'closed': 'Il ticket è stato chiuso',
+    }
+    
+    return status_mapping.get(status, status)
+
+
 def _get_ticket_context(ticket: Ticket) -> Dict[str, Dict[str, Optional[str]]]:
     assignee_names = [
         assignee.get_name() or assignee.email
@@ -87,6 +110,8 @@ def _ticket_post_save(sender, instance, created, **kwargs):
         context = _get_ticket_context(instance)
         context["previous_status"] = prev_status
         context["new_status"] = instance.status
+        context["previous_status_display"] = _get_status_display_message(prev_status)
+        context["new_status_display"] = _get_status_display_message(instance.status)
         _dispatch_notification("ticket_status_changed", recipients, context)
 
 
