@@ -1,8 +1,12 @@
 from base_modules.attachment.serializers import AttachmentCreateSerializer
 from base_modules.mailer.services import send_templated_email
 from base_modules.workspace.models import WorkspaceUser
-from plugins.ticket_manager.permissions import IsWorkspaceMemberOrClientOrAssigneeOrAdmin, can_access_ticket, can_edit_ticket
-from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
+from plugins.ticket_manager.permissions import (
+    IsWorkspaceMemberOrClientOrAssigneeOrAdmin,
+    can_access_ticket,
+    can_edit_ticket,
+    get_user_workspace_ids,
+)
 from rest_framework.response import Response
 from datetime import datetime, time
 from django.db.models import Q, Case, When, IntegerField, Prefetch
@@ -12,7 +16,7 @@ from .models import Ticket, Message, Task, TASK_STATUS_CHOICES, TicketUserRead
 from plugins.project_manager.models import Project
 from base_modules.user_manager.models import User
 from typing import Optional
-from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer, TaskSerializer, TaskCreateSerializer
+from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer, TaskSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from mixtum_core.settings.base import REMOTE_API
@@ -84,63 +88,27 @@ class TicketList(generics.ListCreateAPIView):
                 ),
                 Prefetch(
                     "read_by_users",
-                    queryset=TicketUserRead.objects.filter(user=user),
+                    queryset=TicketUserRead.objects.filter(user=user).only("ticket_id", "last_read_at"),
                 ),
             )
         )
 
         # -----------------------------
-        # Filtri Query Params
-        # -----------------------------
-        params = self.request.query_params
-
-        # -----------------------------
-        # Gestione speciale per filtro project: verifica visibilità basata su client del progetto
-        # -----------------------------
-        project = params.get("project")
-        if project:
-            try:
-                project_id = int(project)
-            except (TypeError, ValueError):
-                raise ValidationError({"project": "Project ID non valido"})
-
-            # Verifica se l'utente può accedere al progetto
-            can_access = False
-            if hasattr(user, "is_superadmin") and callable(user.is_superadmin) and user.is_superadmin():
-                # SuperAdmin può vedere tutto
-                can_access = True
-            else:
-                # Verifica se è il client del progetto
-                try:
-                    project_obj = Project.objects.only('client_id').get(id=project_id)
-                    if project_obj.client_id == user.id:
-                        can_access = True
-                    else:
-                        # Verifica se condivide il workspace con il client del progetto
-                        can_access = requester_shares_workspace_with_project_client(project_id, user.id)
-                except Project.DoesNotExist:
-                    raise ValidationError({"project": "Progetto non trovato"})
-
-            if not can_access:
-                # L'utente non può accedere al progetto, restituisce queryset vuoto
-                return Ticket.objects.none()
-
-            # L'utente può accedere al progetto: mostra tutti i ticket del progetto
-            # indipendentemente dal client del ticket
-            qs = qs.filter(project_id=project_id)
-            # Non applicare il filtro di visibilità standard quando si filtra per project
-            # perché la visibilità è già verificata basandosi sul client del progetto
-            return self._apply_other_filters(qs, params, user)
-
-        # -----------------------------
-        # Permessi/Visibilità (solo se non si sta filtrando per project)
+        # Permessi/Visibilità
         # -----------------------------
         if hasattr(user, "is_superadmin") and callable(user.is_superadmin) and user.is_superadmin():
             # SuperAdmin: vede tutto
             pass
         elif hasattr(user, "is_associate") and callable(user.is_associate) and user.is_associate():
-            # Associate: solo ticket dove è assegnato
-            qs = qs.filter(assignees=user)
+            # Associate: come can_access_ticket — assignee, client, o condivisione workspace
+            # (ticket_workspace nei miei ws, oppure progetto il cui client condivide un ws con me)
+            ws_ids = get_user_workspace_ids(user)
+            base_q = Q(assignees=user) | Q(client=user)
+            if ws_ids:
+                base_q = base_q | Q(ticket_workspace_id__in=ws_ids) | Q(
+                    project__client__workspaceuser_set__workspace_id__in=ws_ids
+                )
+            qs = qs.filter(base_q).distinct()
         else:
             # Utente "normale": visibilità per workspace/client
             workspace_ids = WorkspaceUser.objects.filter(
@@ -157,9 +125,10 @@ class TicketList(generics.ListCreateAPIView):
                 Q(client_id__in=users_in_same_ws_ids)
             ).distinct()
 
-        return self._apply_other_filters(qs, params, user)
-
-    def _apply_other_filters(self, qs, params, user):
+        # -----------------------------
+        # Filtri Query Params
+        # -----------------------------
+        params = self.request.query_params
 
         # mine=true -> solo ticket creati da me o assegnati a me
         mine_val = params.get("mine")
@@ -186,9 +155,7 @@ class TicketList(generics.ListCreateAPIView):
             if not other_user_ids:
                 return Ticket.objects.none()
 
-            # Filtra solo per client nel workspace, senza vincolare lo stato
-            # Il filtro status verrà applicato dopo se presente nei params
-            qs = qs.filter(client_id__in=other_user_ids)
+            qs = qs.filter(client_id__in=other_user_ids, status="open")
 
         # status (singolo)
         status_val = params.get("status")
@@ -213,6 +180,11 @@ class TicketList(generics.ListCreateAPIView):
         priority = params.get("priority")
         if priority:
             qs = qs.filter(priority=priority)
+
+        # project (ID)
+        project = params.get("project")
+        if project:
+            qs = qs.filter(project_id=project)
 
         # search (su titolo/descrizione)
         search = params.get("search")
@@ -323,6 +295,23 @@ class ToggleTicketPayment(APIView):
                 return Response({"message": "fail, ticket non trovato"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+
+class MarkTicketAsRead(APIView):
+    """POST: segna il ticket come letto per l'utente corrente (Opzione 4 - messaggi non letti)."""
+    if REMOTE_API is True:
+        authentication_classes = [JWTAuthentication]
+
+    def post(self, request, ticket_id):
+        ticket = get_object_or_404(Ticket, pk=ticket_id)
+        if not can_access_ticket(request.user, ticket):
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        obj, _ = TicketUserRead.objects.update_or_create(
+            ticket=ticket, user=request.user,
+            defaults={"last_read_at": timezone.now()},
+        )
+        return Response({"message": "success", "last_read_at": obj.last_read_at.isoformat()}, status=status.HTTP_200_OK)
+
 
 class TicketPutView(APIView):
     if REMOTE_API is True:
@@ -449,24 +438,6 @@ class UserClientTicketList(APIView):
             'resolved': resolved_serializer.data,
             'closed': closed_serializer.data,
         }, status=status.HTTP_200_OK)
-
-
-class MarkTicketAsRead(APIView):
-    """POST: segna il ticket come letto per l'utente corrente (Opzione 4 - messaggi non letti)."""
-    if REMOTE_API is True:
-        authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, ticket_id):
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-        if not can_access_ticket(request.user, ticket):
-            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
-        TicketUserRead.objects.update_or_create(
-            ticket=ticket,
-            user=request.user,
-            defaults={"last_read_at": timezone.now()},
-        )
-        return Response({"message": "success"}, status=status.HTTP_200_OK)
 
 
 class TicketMessages(generics.ListCreateAPIView):
@@ -732,45 +703,6 @@ class ProjectTaskList(APIView):
         tasks = Task.objects.filter(project_id=project_id).select_related('assignee')
         serializer = TaskSerializer(tasks, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        project_id = request.data.get('project') or request.data.get('project_id')
-        if not project_id:
-            return Response(
-                {"detail": "Parametro 'project' o 'project_id' obbligatorio."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            project = Project.objects.select_related('client').get(pk=project_id)
-        except Project.DoesNotExist:
-            return Response({"detail": "Progetto non trovato."}, status=status.HTTP_404_NOT_FOUND)
-
-        user = request.user
-        if hasattr(user, "is_at_least_associate") and callable(user.is_at_least_associate) and user.is_at_least_associate():
-            pass
-        elif project.client_id == getattr(user, "id", None):
-            pass
-        else:
-            return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-
-        data = dict(request.data)
-        if 'project_id' in data and 'project' not in data:
-            data['project'] = data.pop('project_id')
-        elif 'project' not in data:
-            data['project'] = project_id
-        if 'ticket' not in data and 'ticket_id' in data:
-            data['ticket'] = data.pop('ticket_id', None)
-        if 'ticket' in data and data['ticket'] is None:
-            del data['ticket']
-
-        serializer = TaskCreateSerializer(data=data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        task = serializer.save()
-        out = TaskSerializer(task)
-        return Response(out.data, status=status.HTTP_201_CREATED)
 
 
 class TaskUpdateView(APIView):

@@ -138,6 +138,16 @@ class Ticket(models.Model):
         return qs.exists() and not qs.exclude(status='done').exists()
 
 
+class TicketUserRead(models.Model):
+    """Ultimo accesso di un utente a un ticket: usato per messaggi non letti (Opzione 4)."""
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='read_by_users')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ticket_reads')
+    last_read_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['ticket', 'user']
+
+
 class Message(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='ticket')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
@@ -152,17 +162,6 @@ class Message(models.Model):
         verbose_name = 'Message'
         verbose_name_plural = 'Messages'
         ordering = ('insert_date',)
-
-
-class TicketUserRead(models.Model):
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='read_by_users')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ticket_reads')
-    last_read_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ['ticket', 'user']
-        verbose_name = 'TicketUserRead'
-        verbose_name_plural = 'TicketUserReads'
 
 
 class Task(models.Model):

@@ -1,7 +1,6 @@
 from plugins.project_manager.models import Project
 from rest_framework import serializers
-from base_modules.user_manager.models import User
-from base_modules.user_manager.serializers import UserDetailSerializer
+from base_modules.user_manager.serializers import UserDetailSerializer, UserDetailSerializer
 from base_modules.attachment.serializers import AttachmentSerializer
 from .models import Ticket, Message, Attachment, Task
 
@@ -23,50 +22,40 @@ class TicketSerializer(serializers.ModelSerializer):
     attachments = AttachmentSerializer(many=True)
     ticket_linked = LinkedTicketSerializer()
     project = ProjectSerializer()
-    last_message = serializers.SerializerMethodField(read_only=True)
-    last_read_at = serializers.SerializerMethodField(read_only=True)
-    has_unread = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Ticket
-        fields = [
-            'id', 'title', 'description', 'client', 'project', 'assignees', 'priority',
-            'hours_estimation', 'opening_date', 'closing_date', 'cost_estimation', 'status',
-            'expected_resolution_date', 'expected_action', 'real_action', 'attachments',
-            'ticket_workspace', 'ticket_linked', 'ticket_type', 'payments_status', 'sla_due_at',
-            'last_message', 'last_read_at', 'has_unread',
-        ]
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['last_message'] = self.get_last_message(instance)
+        ret['has_unread'] = self.get_has_unread(instance)
+        return ret
 
     def get_last_message(self, obj):
-        # related_name 'ticket' on Message -> Ticket: obj.ticket = RelatedManager of Message
-        lm = obj.ticket.order_by('-insert_date').select_related('author').first()
-        if not lm:
+        """Usa i Message prefetchati in get_queryset (Prefetch 'ticket') per evitare N+1."""
+        all_msgs = list(obj.ticket.all())
+        if not all_msgs:
             return None
+        lm = max(all_msgs, key=lambda m: m.insert_date)
         return {
             'id': lm.id,
             'insert_date': lm.insert_date.isoformat() if lm.insert_date else None,
             'author': {'id': lm.author.id, 'permission': lm.author.permission},
         }
 
-    def get_last_read_at(self, obj):
-        request = self.context.get('request')
-        if not request or not request.user:
-            return None
-        tr = obj.read_by_users.filter(user=request.user).first()
-        return tr.last_read_at.isoformat() if tr else None
-
     def get_has_unread(self, obj):
-        lm = obj.ticket.order_by('-insert_date').first()
-        if not lm:
+        """Usa Message e TicketUserRead (read_by_users) prefetchati. has_unread = esiste ultimo messaggio e (mai letto o last_message.insert_date > last_read_at)."""
+        all_msgs = list(obj.ticket.all())
+        if not all_msgs:
             return False
-        request = self.context.get('request')
-        if not request or not request.user:
-            return False
-        tr = obj.read_by_users.filter(user=request.user).first()
-        last_read = tr.last_read_at if tr else None
-        if last_read is None:
+        lm = max(all_msgs, key=lambda m: m.insert_date)
+        read_records = list(obj.read_by_users.all())
+        last_read_at = read_records[0].last_read_at if read_records else None
+        if last_read_at is None:
             return True
-        return lm.insert_date > last_read
+        return lm.insert_date > last_read_at
 
 
 class TicketPostSerializer(serializers.ModelSerializer):
@@ -90,34 +79,6 @@ class MessageFullSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = '__all__'
-
-class TaskCreateSerializer(serializers.ModelSerializer):
-    """Serializer per la creazione di task (campi scrivibili, assignee come ID)."""
-    assignee = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), required=False, allow_null=True
-    )
-
-    class Meta:
-        model = Task
-        fields = [
-            'project',
-            'ticket',
-            'title',
-            'description',
-            'assignee',
-            'status',
-            'priority',
-            'estimate_hours',
-            'start_date',
-            'due_date',
-        ]
-        extra_kwargs = {
-            'title': {'required': True},
-            'ticket': {'required': False, 'allow_null': True},
-            'status': {'default': 'todo'},
-            'priority': {'default': 'medium'},
-        }
-
 
 class TaskSerializer(serializers.ModelSerializer):
     assignee = UserDetailSerializer()
