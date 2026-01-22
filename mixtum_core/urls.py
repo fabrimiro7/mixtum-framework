@@ -60,6 +60,12 @@ urlpatterns = [
     # Workspace
     path('api/workspace/', include('base_modules.workspace.urls')),
 
+    # Finance
+    path('api/finance_manager_accounts/', include(('plugins.finance_manager_accounts.urls', 'finance_manager_accounts'), namespace='finance_account')),
+    path('api/finance_manager_core/', include(('plugins.finance_manager_core.urls', 'finance_manager_core'), namespace='finance_core')),
+    path('api/finance_manager_planning/', include(('plugins.finance_manager_planning.urls', 'finance_manager_planning'), namespace='report')),
+
+
     # Cheshire Cat AI Integration
     path('api/cat/', include(('plugins.ai_integrations.cashirecat.urls', 'cashirecat'), namespace='cashirecat')),
 ]

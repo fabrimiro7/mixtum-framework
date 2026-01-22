@@ -1,0 +1,1 @@
+default_app_config = 'plugins.finance_manager_accounts.apps.FinanceManagerAccountsConfig'

@@ -64,6 +64,7 @@ services:
   # Metabase + DB dedicato
   # -------------------------
   metabase:
+    profiles: ["metabase"]
     image: metabase/metabase:latest
     depends_on:
       - metabase_db
@@ -87,6 +88,7 @@ services:
     restart: unless-stopped
 
   metabase_db:
+    profiles: ["metabase"]
     image: postgres:16-alpine
     deploy:
       resources:

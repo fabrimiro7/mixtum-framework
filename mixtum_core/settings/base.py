@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     "plugins.ticket_manager",
     "plugins.sprint_manager",
     "plugins.project_manager",
+    "plugins.finance_manager_core",
+    "plugins.finance_manager_accounts",
+    "plugins.finance_manager_planning"
 ]
 SITE_ID = int(os.getenv("SITE_ID", "1"))
 

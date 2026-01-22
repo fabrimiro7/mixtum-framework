@@ -13,10 +13,16 @@ from plugins.project_manager.permissions import requester_shares_workspace_with_
 
 
 def _accessible_project_ids_for(user):
-    if user.is_superadmin() or user.is_admin():
+    if user.is_superadmin():
         return set(Project.objects.values_list('id', flat=True))
 
+    # Start with projects where user is the client
     ids = set(Project.objects.filter(client=user).values_list('id', flat=True))
+    
+    # Add projects where user is a contributor
+    ids.update(Project.objects.filter(contributors=user).values_list('id', flat=True))
+    
+    # Add projects where user shares workspace with project client
     for project in Project.objects.exclude(id__in=ids):
         if requester_shares_workspace_with_project_client(project.id, user.id):
             ids.add(project.id)
@@ -32,7 +38,7 @@ class ProjectList(generics.ListCreateAPIView):
         return Project.objects.all()
 
     def get(self, request):
-        if request.user.is_superadmin() or request.user.is_admin():
+        if request.user.is_superadmin():
             projects = Project.objects.all()
         else:
             accessible_project_ids = _accessible_project_ids_for(request.user)
