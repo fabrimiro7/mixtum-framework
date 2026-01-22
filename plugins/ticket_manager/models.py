@@ -154,6 +154,17 @@ class Message(models.Model):
         ordering = ('insert_date',)
 
 
+class TicketUserRead(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='read_by_users')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ticket_reads')
+    last_read_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['ticket', 'user']
+        verbose_name = 'TicketUserRead'
+        verbose_name_plural = 'TicketUserReads'
+
+
 class Task(models.Model):
     """
     Rappresenta un'unità di lavoro interna legata a un progetto o a un ticket.

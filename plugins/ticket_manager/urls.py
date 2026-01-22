@@ -8,6 +8,7 @@ urlpatterns = [
     path('tickets-put/<int:pk>/', TicketPutView.as_view(), name='ticket-put'),
     path('tickets-all/', TicketView.as_view(), name='all-ticket-list'),
     path('tickets/<int:ticket_id>/messages/', TicketMessages.as_view(), name='ticket-messages'),
+    path('tickets/<int:ticket_id>/mark-as-read/', MarkTicketAsRead.as_view(), name='ticket-mark-as-read'),
     path('my-assigned-tickets/', UserAssignedTicketList.as_view(), name='user-assigned-tickets'),
     path('my-client-tickets/', UserClientTicketList.as_view(), name='user-client-tickets'),
 

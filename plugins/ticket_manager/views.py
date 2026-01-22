@@ -5,14 +5,14 @@ from plugins.ticket_manager.permissions import IsWorkspaceMemberOrClientOrAssign
 from plugins.project_manager.permissions import requester_shares_workspace_with_project_client
 from rest_framework.response import Response
 from datetime import datetime, time
-from django.db.models import Q, Case, When, IntegerField
+from django.db.models import Q, Case, When, IntegerField, Prefetch
 from rest_framework import generics
 from rest_framework import status
-from .models import Ticket, Message, Task, TASK_STATUS_CHOICES
+from .models import Ticket, Message, Task, TASK_STATUS_CHOICES, TicketUserRead
 from plugins.project_manager.models import Project
 from base_modules.user_manager.models import User
 from typing import Optional
-from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer, TaskSerializer
+from .serializers import MessageFullSerializer, TicketSerializer, MessageSerializer, TicketPostSerializer, TaskSerializer, TaskCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from mixtum_core.settings.base import REMOTE_API
@@ -75,7 +75,18 @@ class TicketList(generics.ListCreateAPIView):
         qs = (
             Ticket.objects
             .select_related("client", "project", "ticket_workspace")
-            .prefetch_related("assignees", "attachments")
+            .prefetch_related(
+                "assignees",
+                "attachments",
+                Prefetch(
+                    "ticket",
+                    queryset=Message.objects.order_by("-insert_date").select_related("author"),
+                ),
+                Prefetch(
+                    "read_by_users",
+                    queryset=TicketUserRead.objects.filter(user=user),
+                ),
+            )
         )
 
         # -----------------------------
@@ -440,6 +451,24 @@ class UserClientTicketList(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class MarkTicketAsRead(APIView):
+    """POST: segna il ticket come letto per l'utente corrente (Opzione 4 - messaggi non letti)."""
+    if REMOTE_API is True:
+        authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, ticket_id):
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        if not can_access_ticket(request.user, ticket):
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        TicketUserRead.objects.update_or_create(
+            ticket=ticket,
+            user=request.user,
+            defaults={"last_read_at": timezone.now()},
+        )
+        return Response({"message": "success"}, status=status.HTTP_200_OK)
+
+
 class TicketMessages(generics.ListCreateAPIView):
     serializer_class = MessageFullSerializer
     if REMOTE_API == True:
@@ -703,6 +732,45 @@ class ProjectTaskList(APIView):
         tasks = Task.objects.filter(project_id=project_id).select_related('assignee')
         serializer = TaskSerializer(tasks, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        project_id = request.data.get('project') or request.data.get('project_id')
+        if not project_id:
+            return Response(
+                {"detail": "Parametro 'project' o 'project_id' obbligatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            project = Project.objects.select_related('client').get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response({"detail": "Progetto non trovato."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        if hasattr(user, "is_at_least_associate") and callable(user.is_at_least_associate) and user.is_at_least_associate():
+            pass
+        elif project.client_id == getattr(user, "id", None):
+            pass
+        else:
+            return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        data = dict(request.data)
+        if 'project_id' in data and 'project' not in data:
+            data['project'] = data.pop('project_id')
+        elif 'project' not in data:
+            data['project'] = project_id
+        if 'ticket' not in data and 'ticket_id' in data:
+            data['ticket'] = data.pop('ticket_id', None)
+        if 'ticket' in data and data['ticket'] is None:
+            del data['ticket']
+
+        serializer = TaskCreateSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task = serializer.save()
+        out = TaskSerializer(task)
+        return Response(out.data, status=status.HTTP_201_CREATED)
 
 
 class TaskUpdateView(APIView):

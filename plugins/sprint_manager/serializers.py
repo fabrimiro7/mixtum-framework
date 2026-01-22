@@ -1,7 +1,33 @@
 from rest_framework import serializers
+from base_modules.user_manager.models import User
 from base_modules.user_manager.serializers import UserDetailSerializer
 from plugins.project_manager.models import Project
 from .models import Phase
+
+
+class PhaseCreateSerializer(serializers.ModelSerializer):
+    """Serializer per la creazione di fasi (campi scrivibili, owner come ID)."""
+    owner = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), required=False, allow_null=True
+    )
+
+    class Meta:
+        model = Phase
+        fields = [
+            'project',
+            'title',
+            'description',
+            'owner',
+            'status',
+            'priority',
+            'start_date',
+            'due_date',
+        ]
+        extra_kwargs = {
+            'title': {'required': True},
+            'status': {'default': 'todo'},
+            'priority': {'default': 'medium'},
+        }
 
 
 class PhaseSerializer(serializers.ModelSerializer):

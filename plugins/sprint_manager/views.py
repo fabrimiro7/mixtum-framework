@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from base_modules.user_manager.authentication import JWTAuthentication
 from plugins.project_manager.models import Project
 from .models import Phase, TASK_STATUS_CHOICES
-from .serializers import PhaseSerializer
+from .serializers import PhaseSerializer, PhaseCreateSerializer
 
 
 class ProjectPhaseList(APIView):
@@ -35,6 +35,41 @@ class ProjectPhaseList(APIView):
         phases = Phase.objects.filter(project=project).select_related('owner')
         serializer = PhaseSerializer(phases, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        project_id = request.data.get('project') or request.data.get('project_id')
+        if not project_id:
+            return Response(
+                {"detail": "Parametro 'project' o 'project_id' obbligatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response({"detail": "Progetto non trovato."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        if hasattr(user, "is_at_least_associate") and callable(user.is_at_least_associate) and user.is_at_least_associate():
+            pass
+        elif project.client_id == getattr(user, "id", None):
+            pass
+        else:
+            return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        data = dict(request.data)
+        if 'project_id' in data and 'project' not in data:
+            data['project'] = data.pop('project_id')
+        elif 'project' not in data:
+            data['project'] = project_id
+
+        serializer = PhaseCreateSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        phase = serializer.save()
+        out = PhaseSerializer(phase)
+        return Response(out.data, status=status.HTTP_201_CREATED)
 
 
 class PhaseDetail(APIView):
