@@ -181,10 +181,24 @@ class TicketList(generics.ListCreateAPIView):
         if priority:
             qs = qs.filter(priority=priority)
 
-        # project (ID)
-        project = params.get("project")
-        if project:
-            qs = qs.filter(project_id=project)
+        # project__in (lista CSV) ha priorità su project (singolo)
+        project_in_val = params.get("project__in")
+        if project_in_val:
+            raw = [x.strip() for x in project_in_val.split(",") if x.strip()]
+            ids = []
+            for x in raw:
+                try:
+                    i = int(x)
+                    if i > 0:
+                        ids.append(i)
+                except (TypeError, ValueError):
+                    pass
+            if ids:
+                qs = qs.filter(project_id__in=ids)
+        else:
+            project = params.get("project")
+            if project:
+                qs = qs.filter(project_id=project)
 
         # search (su titolo/descrizione)
         search = params.get("search")
