@@ -16,13 +16,14 @@ from plugins.project_manager.permissions import requester_shares_workspace_with_
 
 
 def _accessible_project_ids_for(user):
-    if user.permission in (100, 50):
+    if user.is_superadmin() or user.is_admin():
         return set(Project.objects.values_list('id', flat=True))
 
-    ids = set()
-    if user.permission == 1:
-        ids.update(Project.objects.filter(client=user).values_list('id', flat=True))
+    # Projects where user is client or contributor, independent of role
+    ids = set(Project.objects.filter(client=user).values_list('id', flat=True))
+    ids.update(Project.objects.filter(contributors=user).values_list('id', flat=True))
 
+    # Projects where user shares workspace with project client
     for project in Project.objects.exclude(id__in=ids):
         if requester_shares_workspace_with_project_client(project.id, user.id):
             ids.add(project.id)
@@ -39,7 +40,7 @@ class TutorialList(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
 
-        if user.permission in (100, 50):
+        if user.is_superadmin() or user.is_admin():
             return Tutorial.objects.all().distinct()
 
         accessible_project_ids = _accessible_project_ids_for(user)
@@ -54,6 +55,9 @@ class TutorialByProjectView(APIView):
 
     serializer_class = TutorialSerializer
     def get(self, request, pk): ###pk è l'id del progetto per cui effettuiamo la ricerca
+        accessible_project_ids = _accessible_project_ids_for(request.user)
+        if int(pk) not in accessible_project_ids:
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
         tutorials = Tutorial.objects.filter(projects__id=pk)
         tutorials_serializer = TutorialFullSerializer(tutorials, many=True)
         return Response({'data': tutorials_serializer.data}, status=status.HTTP_200_OK)
