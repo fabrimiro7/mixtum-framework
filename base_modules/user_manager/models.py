@@ -44,6 +44,7 @@ class UserManager(BaseUserManager):
 # -----------------------------
 USER_LEVEL = (
     (100, "SuperAdmin"),
+    (70, "Senior Manager"),
     (60, "Manager"),
     (50, "Associate"),
     (10, "Utente"),
