@@ -1,5 +1,5 @@
 from base_modules.attachment.serializers import AttachmentCreateSerializer
-from base_modules.mailer.services import send_templated_email
+from base_modules.mailer.services import send_individual_templated_emails
 from base_modules.workspace.models import WorkspaceUser
 from plugins.ticket_manager.permissions import (
     IsWorkspaceMemberOrClientOrAssigneeOrAdmin,
@@ -474,12 +474,52 @@ class TicketMessages(generics.ListCreateAPIView):
         if message_serializer.is_valid():
             message_serializer.save()
         try:
-            ticket = Ticket.objects.get(id=ticket_id)
+            ticket = Ticket.objects.select_related('client').prefetch_related('assignees').get(id=ticket_id)
             if ticket:
-                send_templated_email(
+                # Costruisci la lista dei destinatari con i loro dati personali
+                recipients = []
+                seen_emails = set()
+                
+                # Aggiungi il client
+                if ticket.client and ticket.client.email:
+                    email = ticket.client.email.lower()
+                    if email not in seen_emails:
+                        seen_emails.add(email)
+                        recipients.append({
+                            'email': ticket.client.email,
+                            'first_name': ticket.client.first_name or '',
+                            'last_name': ticket.client.last_name or '',
+                            'name': ticket.client.get_name() or ticket.client.email,
+                        })
+                
+                # Aggiungi gli assignees
+                for user in ticket.assignees.all():
+                    if user.email:
+                        email = user.email.lower()
+                        if email not in seen_emails:
+                            seen_emails.add(email)
+                            recipients.append({
+                                'email': user.email,
+                                'first_name': user.first_name or '',
+                                'last_name': user.last_name or '',
+                                'name': user.get_name() or user.email,
+                            })
+                
+                # Invia email individuali personalizzate
+                send_individual_templated_emails(
                     template_slug="notifica_messaggio",
-                    to=[ticket.client.email] + [user.email for user in ticket.assignees.all()],
-                    context={"user": {"first_name": request.user.first_name}, "ticket": {"id": ticket.id, "title": ticket.title}},
+                    recipients=recipients,
+                    base_context={
+                        "sender": {
+                            "first_name": request.user.first_name or '',
+                            "last_name": request.user.last_name or '',
+                            "name": request.user.get_name() or request.user.email,
+                        },
+                        "ticket": {
+                            "id": ticket.id,
+                            "title": ticket.title,
+                        },
+                    },
                 )
         except Exception as e:
             print("Errore invio email:", str(e))
