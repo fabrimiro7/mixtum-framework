@@ -40,3 +40,6 @@ Pillow>=10,<12
 
 # Streaming WebSocket
 websocket-client>=1.6.1
+
+# Twilio (WhatsApp API)
+twilio>=9.0,<10
