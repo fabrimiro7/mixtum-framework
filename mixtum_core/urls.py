@@ -68,6 +68,9 @@ urlpatterns = [
 
     # Cheshire Cat AI Integration
     path('api/cat/', include(('plugins.ai_integrations.cashirecat.urls', 'cashirecat'), namespace='cashirecat')),
+
+    # Twilio WhatsApp Integration
+    path('api/whatsapp/', include(('base_modules.integrations.twilio.urls', 'twilio'), namespace='twilio')),
 ]
 
 
