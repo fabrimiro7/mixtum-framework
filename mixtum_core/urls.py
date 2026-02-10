@@ -68,6 +68,9 @@ urlpatterns = [
 
     # Cheshire Cat AI Integration
     path('api/cat/', include(('plugins.ai_integrations.cashirecat.urls', 'cashirecat'), namespace='cashirecat')),
+
+    # Documents
+    path('api/documents/', include(('plugins.documents.urls', 'documents'), namespace='documents')),
 ]
 
 
