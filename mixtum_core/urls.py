@@ -72,6 +72,8 @@ urlpatterns = [
     # External Integrations
     path('api/slack/', include(('integrations.slack.urls', 'slack'), namespace='slack')),
     path('api/n8n/', include(('integrations.n8n.urls', 'n8n'), namespace='n8n')),
+    # Twilio WhatsApp Integration
+    path('api/whatsapp/', include(('base_modules.integrations.twilio.urls', 'twilio'), namespace='twilio')),
 ]
 
 
