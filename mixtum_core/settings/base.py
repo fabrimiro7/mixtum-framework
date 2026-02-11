@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "base_modules.attachment",
     "base_modules.the_watcher",
     "base_modules.links",
+    "base_modules.integrations.twilio",
     "plugins.plugin_example",
     "plugins.meeting",
     "plugins.academy",
@@ -61,6 +62,10 @@ INSTALLED_APPS = [
     "plugins.finance_manager_accounts",
     "plugins.finance_manager_planning",
     "plugins.documents",
+
+    # Integrations
+    "integrations.slack",
+    "integrations.n8n",
 ]
 SITE_ID = int(os.getenv("SITE_ID", "1"))
 
@@ -104,3 +109,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # -------------------------------------------------------------------
 from .static_media import *   # definisce STATIC_URL, MEDIA_URL, STORAGES base
 from .storage_s3 import *     # se USE_S3=1 override STORAGES["default"] (media) e opz. "staticfiles"
+
+# -------------------------------------------------------------------
+# Twilio WhatsApp Integration
+# -------------------------------------------------------------------
+from .twilio_conf import *

@@ -252,6 +252,109 @@ def send_email(
     return True
 
 
+def send_individual_templated_emails(
+    *,
+    template_slug: str,
+    recipients: List[Dict[str, Any]],
+    base_context: Dict[str, Any],
+    subject_override: Optional[str] = None,
+    from_email: Optional[str] = None,
+    from_name: Optional[str] = None,
+    attachments: Optional[List[tuple]] = None,
+    fail_silently: bool = False,
+    scheduled_at: Optional[Any] = None,
+    dispatch_immediately_if_due: bool = True,
+) -> List[EmailModel]:
+    """
+    Invia email individuali personalizzate a ciascun destinatario.
+    
+    Invece di mandare una sola email con tutti in CC, questa funzione crea
+    e accoda un'email separata per ogni destinatario, con il proprio contesto
+    personalizzato (es. nome, cognome).
+    
+    Args:
+        template_slug: slug del template da usare
+        recipients: lista di dizionari, ognuno con:
+            - 'email': indirizzo email del destinatario (obbligatorio)
+            - 'first_name': nome (opzionale)
+            - 'last_name': cognome (opzionale)
+            - 'name': nome completo (opzionale, alternativo a first_name/last_name)
+            - altri campi custom che verranno aggiunti al contesto
+        base_context: contesto base condiviso tra tutte le email
+        subject_override: oggetto personalizzato (opzionale)
+        from_email: mittente (opzionale, usa DEFAULT_FROM_EMAIL se vuoto)
+        from_name: nome visualizzato del mittente (opzionale)
+        attachments: lista di tuple (filename, content_bytes, mimetype)
+        fail_silently: se True, non solleva eccezioni in caso di errore
+        scheduled_at: data/ora di invio programmato (opzionale)
+        dispatch_immediately_if_due: se True, accoda immediatamente se l'invio è dovuto
+    
+    Returns:
+        Lista di istanze EmailModel create
+    """
+    if not recipients:
+        return []
+    
+    tmpl = EmailTemplate.objects.get(slug=template_slug)
+    created_emails = []
+    
+    for recipient_data in recipients:
+        recipient_email = recipient_data.get('email')
+        if not recipient_email:
+            continue
+        
+        # Costruisci il contesto personalizzato per questo destinatario
+        recipient_context = {**(base_context or {})}
+        
+        # Aggiungi i dati del destinatario al contesto
+        recipient_info = {
+            'email': recipient_email,
+            'first_name': recipient_data.get('first_name', ''),
+            'last_name': recipient_data.get('last_name', ''),
+            'name': recipient_data.get('name') or (
+                f"{recipient_data.get('first_name', '')} {recipient_data.get('last_name', '')}".strip()
+            ),
+        }
+        # Aggiungi eventuali altri campi custom dal recipient_data
+        for key, value in recipient_data.items():
+            if key not in ('email',):
+                recipient_info[key] = value
+        
+        recipient_context['recipient'] = recipient_info
+        
+        # Crea l'email per questo destinatario
+        email_obj = EmailModel.objects.create(
+            from_email=from_email,
+            to=[recipient_email],
+            cc=[],  # Niente CC - email individuali
+            bcc=[],
+            subject=subject_override or "",
+            template=tmpl,
+            context=recipient_context,
+            status=EmailStatus.QUEUED,
+            scheduled_at=scheduled_at,
+        )
+        
+        # Aggiungi allegati se presenti
+        if attachments:
+            from django.core.files.base import ContentFile
+            from .models import EmailAttachment
+            
+            for (filename, content, mimetype_value) in attachments:
+                EmailAttachment.objects.create(
+                    email=email_obj,
+                    file=ContentFile(content, name=filename),
+                    name=filename,
+                    mimetype=(mimetype_value or ""),
+                )
+        
+        # Accoda l'email
+        enqueue_email(email_obj, dispatch_immediately_if_due=dispatch_immediately_if_due)
+        created_emails.append(email_obj)
+    
+    return created_emails
+
+
 def send_templated_email(
     *,
     template_slug: str,
