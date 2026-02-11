@@ -58,7 +58,7 @@ class DocumentType(models.Model):
         indexes = [
             models.Index(
                 fields=["workspace", "is_active", "sort_order"],
-                name="documents_doctype_ws_active_idx",
+                name="doc_doctype_ws_act_idx",
             ),
         ]
 
