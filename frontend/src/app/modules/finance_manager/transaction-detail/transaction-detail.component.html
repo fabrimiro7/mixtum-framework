@@ -1,0 +1,140 @@
+<div class="container-fluid">
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && transaction">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+      <div class="col">
+        <h1>Dettaglio Movimento #{{ transaction.id }}</h1>
+      </div>
+      <div class="col-md-auto text-md-right">
+        <button mat-raised-button class="primary-button-light me-2" (click)="back()">
+          <mat-icon fontIcon="arrow_back"></mat-icon>
+          <span>INDIETRO</span>
+        </button>
+        <button mat-raised-button class="primary-button-light me-2" (click)="edit()">
+          <mat-icon fontIcon="edit"></mat-icon>
+          <span>MODIFICA</span>
+        </button>
+        <button mat-raised-button color="warn" (click)="delete()">
+          <mat-icon fontIcon="delete"></mat-icon>
+          <span>ELIMINA</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Info Card -->
+    <div class="ed-block-standard mb-4">
+      <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-8">
+          <h2 class="description-title">{{ transaction.description }}</h2>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Tipo</span>
+              <span class="type-badge" [ngClass]="transaction.transaction_type === 'income' ? 'type-income' : 'type-expense'">
+                {{ getTypeLabel(transaction.transaction_type) }}
+              </span>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Stato</span>
+              <span class="status-badge" [ngClass]="'status-' + transaction.status">
+                {{ getStatusLabel(transaction.status) }}
+              </span>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Categoria</span>
+              <span class="category-badge" [style.background-color]="transaction.category?.color + '20'" [style.color]="transaction.category?.color">
+                {{ transaction.category?.name || '-' }}
+              </span>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Conto</span>
+              <span>{{ transaction.account?.name || '-' }}</span>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Data Competenza</span>
+              <span>{{ formatDate(transaction.competence_date) }}</span>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Data Pagamento</span>
+              <span>{{ formatDate(transaction.payment_date) }}</span>
+            </div>
+
+            <div class="info-item">
+              <span class="info-label">Origine Dato</span>
+              <span>{{ getDataSourceLabel(transaction.data_source) }}</span>
+            </div>
+
+            <div class="info-item" *ngIf="transaction.external_reference">
+              <span class="info-label">Riferimento Esterno</span>
+              <span>{{ transaction.external_reference }}</span>
+            </div>
+
+            <div class="info-item" *ngIf="transaction.is_hypothetical">
+              <span class="info-label">Tipo Movimento</span>
+              <span class="hypothetical-badge">Ipotetico</span>
+            </div>
+          </div>
+
+          <div class="notes-section" *ngIf="transaction.notes">
+            <span class="info-label">Note</span>
+            <p class="notes-text">{{ transaction.notes }}</p>
+          </div>
+        </div>
+
+        <!-- Right Column - Amount -->
+        <div class="col-md-4">
+          <div class="amount-card" [ngClass]="transaction.transaction_type === 'income' ? 'income-card' : 'expense-card'">
+            <span class="amount-label">Importo Lordo</span>
+            <span class="amount-value">
+              {{ transaction.transaction_type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.gross_amount) }}
+            </span>
+
+            <div class="amount-details" *ngIf="transaction.vat_percentage > 0">
+              <div class="amount-detail">
+                <span>IVA ({{ transaction.vat_percentage }}%)</span>
+                <span>{{ formatCurrency(transaction.vat_amount || 0) }}</span>
+              </div>
+              <div class="amount-detail">
+                <span>Importo Netto</span>
+                <span>{{ formatCurrency(transaction.net_amount || 0) }}</span>
+              </div>
+            </div>
+
+            <!-- Mark as Paid Button -->
+            <button mat-raised-button class="mark-paid-btn" 
+                    *ngIf="transaction.status !== 'paid'" 
+                    (click)="markAsPaid()">
+              <mat-icon>check_circle</mat-icon>
+              Segna come Pagato
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timestamps -->
+    <div class="ed-block-standard">
+      <div class="row">
+        <div class="col-md-6">
+          <span class="info-label">Creato il</span>
+          <span>{{ formatDate(transaction.created_at) }}</span>
+        </div>
+        <div class="col-md-6">
+          <span class="info-label">Ultima modifica</span>
+          <span>{{ formatDate(transaction.updated_at) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

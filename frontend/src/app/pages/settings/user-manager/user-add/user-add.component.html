@@ -1,0 +1,186 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Aggiungi un nuovo utente</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button
+        id="btn"
+        mat-raised-button
+        class="primary-button-light"
+        type="button"
+        (click)="redirectTo('usermanager/users-list')">
+        <span>Annulla</span>
+      </button>
+
+      <!-- Top submit button mirrors the one in the form -->
+      <button
+        id="btn"
+        mat-raised-button
+        class="primary-button"
+        type="button"
+        [disabled]="!userProfileForm || userProfileForm.invalid || isEditing"
+        (click)="addUser()">
+        <span *ngIf="!isEditing">Aggiungi Utente</span>
+        <span *ngIf="isEditing">Salvataggio...</span>
+        <mat-icon fontIcon="arrow_forward"></mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="col-sm ed-block-standard">
+    <form [formGroup]="userProfileForm" class="ed-margin-30 tw-form-grid" (ngSubmit)="addUser()">
+      
+      <div class="row">
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Email</label>
+            <input
+              class="tw-input"
+              placeholder="Email"
+              formControlName="email"
+              type="email"
+            />
+            <p class="tw-error" *ngIf="f['email']?.touched && f['email']?.hasError('required')">
+              Email obbligatoria.
+            </p>
+            <p class="tw-error" *ngIf="f['email']?.touched && f['email']?.hasError('email')">
+              Inserisci un'email valida.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Password</label>
+            <input
+              class="tw-input"
+              placeholder="Password"
+              type="password"
+              formControlName="password"
+            />
+            <p class="tw-error" *ngIf="f['password']?.touched && f['password']?.hasError('required')">
+              Password obbligatoria.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Conferma Password</label>
+            <input
+              class="tw-input"
+              placeholder="Conferma Password"
+              type="password"
+              formControlName="password_confirm"
+            />
+            <p class="tw-error" *ngIf="f['password_confirm']?.touched && f['password_confirm']?.hasError('required')">
+              Conferma password obbligatoria.
+            </p>
+            <p class="tw-error" *ngIf="(f['password_confirm']?.touched || f['password']?.touched) && passwordMismatch">
+              Le password non coincidono.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Codice Fiscale</label>
+            <input
+              class="tw-input"
+              placeholder="Codice Fiscale"
+              formControlName="fiscal_code"
+            />
+            <p class="tw-error" *ngIf="f['fiscal_code']?.touched && f['fiscal_code']?.hasError('required')">
+              Codice fiscale obbligatorio.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Nome</label>
+            <input
+              class="tw-input"
+              placeholder="Nome"
+              formControlName="first_name"
+            />
+            <p class="tw-error" *ngIf="f['first_name']?.touched && f['first_name']?.hasError('required')">
+              Nome obbligatorio.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Cognome</label>
+            <input
+              class="tw-input"
+              placeholder="Cognome"
+              formControlName="last_name"
+            />
+            <p class="tw-error" *ngIf="f['last_name']?.touched && f['last_name']?.hasError('required')">
+              Cognome obbligatorio.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Telefono</label>
+            <input
+              class="tw-input"
+              placeholder="Telefono"
+              formControlName="phone"
+            />
+            <p class="tw-error" *ngIf="f['phone']?.touched && f['phone']?.hasError('required')">
+              Telefono obbligatorio.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Cellulare</label>
+            <input
+              class="tw-input"
+              placeholder="Cellulare"
+              formControlName="mobile"
+            />
+            <p class="tw-error" *ngIf="f['mobile']?.touched && f['mobile']?.hasError('required')">
+              Cellulare obbligatorio.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-sm">
+          <div class="tw-field" style="width: 100%;">
+            <label class="tw-label">Username (opzionale)</label>
+            <input
+              class="tw-input"
+              placeholder="Username"
+              formControlName="username"
+            />
+          </div>
+        </div>
+      </div>
+
+      <button
+        id="btnForm"
+        mat-raised-button
+        class="primary-button"
+        type="submit"
+        [disabled]="userProfileForm.invalid || isEditing">
+        <span *ngIf="!isEditing">Aggiungi Utente</span>
+        <span *ngIf="isEditing">Salvataggio...</span>
+        <mat-icon fontIcon="arrow_forward"></mat-icon>
+      </button>
+    </form>
+  </div>
+</div>

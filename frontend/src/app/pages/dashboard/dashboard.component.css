@@ -1,0 +1,608 @@
+#btn {
+  width: 94%;
+}
+
+.homeCard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: left;
+  margin-bottom: 20px;
+}
+
+.homeCard-header h3 {
+  align-self: center;
+  margin: 0px;
+}
+
+.view-link {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--ed-blue);
+  text-decoration: none;
+}
+
+.view-link:hover {
+  text-decoration: underline;
+}
+
+.titolo {
+  margin-block-end: 0px!important;
+}
+
+.sottotitolo {
+  font-size: 22px;
+  color: #666;
+}
+
+/* --- PROFILO --- */
+.profile-body {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.profile-info h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.profile-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.profile-products {
+  margin-top: 10px;
+}
+
+.profile-products h5 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.product-list {
+  margin-top: 5px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;   /* Va a capo automaticamente */
+}
+
+.product {
+  font-size: 12px;
+  color: var(--ed-blue-light);
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 5px;
+  flex: 0 1 auto;
+}
+
+/* --- CARD AZIONI --- */
+.homeCard{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;     /* default (mobile/tablet) */
+  align-items: center;    /* default (mobile/tablet) */
+  padding: 20px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.bg-blue-green {
+  background: linear-gradient(135deg, #0d0dba, #b8ee39);
+}
+
+.bg-blue-purple {
+  background: linear-gradient(135deg, #8000ff, #0d0dba);
+}
+
+.bg-green-orange {
+  background: linear-gradient(135deg, #ff7f11, #b8ee39);
+}
+
+.row.g-3 > [class*="col-"] {
+  display: flex;
+}
+
+.ed-block-standard.homeCard {
+  width: 100%;
+}
+
+/* Stili per i puntini colorati di stato */
+.status-dot {
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.status-open { background-color: var(--ed-green); }
+.status-in-progress { background-color: var(--ed-purple); }
+.status-in_progress { background-color: var(--ed-purple); }
+.status-resolved { background-color: var(--ed-blue-light); }
+.status-closed { background-color: var(--ed-red); }
+
+/* Articolo (sezione generica) */
+.article {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.article:last-child { border-bottom: none; }
+
+.article-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.article-content { flex: 1; }
+
+.article-title {
+  font-size: 18px;
+  color: var(--ed-gray-text);
+  margin: 0 0 10px;
+  font-weight: bold;
+}
+
+.article-description {
+  font-size: 14px;
+  color: var(--ed-gray-text);
+  margin: 0 0 10px;
+}
+
+.read-more {
+  color: var(--ed-blue-dark);
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.read-more:hover { text-decoration: underline; }
+
+.large-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 20px;
+  color: var(--ed-white);
+}
+
+.shortcutTitle {
+  color: var(--ed-white)!important;
+  font-weight: 400!important;
+  font-size: 22px;
+}
+
+#dashboard { margin-top: 15px; }
+
+#nomeUtente {
+  font-size: 22px;
+  color: var(--ed-gray-text);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.blueLight { color: var(--ed-gray-text)!important; }
+
+/* ============================= */
+/*        RESPONSIVE RULES       */
+/* ============================= */
+
+/* --- Mobile (≤ 767px): più spaziatura tra le card e padding maggiore --- */
+@media screen and (max-width: 767px) {
+
+  .ed-block-standard {
+    margin-bottom: 15px;
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
+  /* Spaziatura extra tra le tre card */
+  .row.g-3 {
+    row-gap: 22px; /* aumenta vertical gap tra card */
+  }
+
+  .ed-block-standard.homeCard {
+    padding: 24px; /* un pizzico più di respiro per mobile */
+  }
+
+  .d-flex { flex-direction: column; }
+}
+
+/* --- Tablet (768px–1024px): layout già esistente --- */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+
+  .ed-block-standard {
+    margin-bottom: 15px;
+    margin-left: 0px;
+    margin-right: 0px;
+    width: 100%;
+  }
+
+  .ed-block-standard.homeCard {
+    flex: 1;
+    width: 100%;
+  }
+
+  .d-flex {
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  #dashboard .row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .col-lg-8 {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .col-lg-4 { max-width: 100%; }
+}
+
+/* --- Sotto 1030px: card a larghezza piena --- */
+@media screen and (max-width: 1029px) {
+  #dashboard .row.g-3 > [class*="col-xl-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* --- Desktop (≥ 1030px): card affiancate e icona + testo allineati a sinistra --- */
+@media screen and (min-width: 1030px) {
+  .homeCard {
+    align-items: flex-start; /* sinistra */
+    text-align: left;        /* sinistra */
+  }
+
+  /* opzionale: riduci leggermente il gap verticale per maggiore compattezza */
+  .large-icon { margin-bottom: 14px; }
+}
+
+/* =========================================================
+   SKELETON LOADER STYLES
+   ========================================================= */
+
+/* Animazione shimmer per skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-base {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+/* Skeleton per il saluto */
+.skeleton-greeting {
+  width: 250px;
+  height: 32px;
+  margin-bottom: 8px;
+}
+
+.skeleton-subtitle {
+  width: 300px;
+  height: 26px;
+}
+
+/* Skeleton per le card azioni */
+.skeleton-card {
+  background: #f5f5f5;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.skeleton-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-title {
+  width: 180px;
+  height: 24px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-button {
+  width: 120px;
+  height: 40px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+/* Skeleton per header e link */
+.skeleton-text {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-header {
+  width: 120px;
+  height: 24px;
+}
+
+.skeleton-link {
+  width: 100px;
+  height: 20px;
+}
+
+/* Skeleton per tabella */
+.skeleton-table {
+  width: 100%;
+}
+
+.skeleton-table-header {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.skeleton-table-row {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+}
+
+.skeleton-cell {
+  flex: 1;
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-cell:nth-child(1) {
+  flex: 2;
+}
+
+.skeleton-cell:nth-child(3) {
+  flex: 0.8;
+}
+
+/* Skeleton per profilo */
+.skeleton-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.skeleton-name {
+  width: 150px;
+  height: 22px;
+  margin-bottom: 8px;
+}
+
+.skeleton-email {
+  width: 200px;
+  height: 16px;
+}
+
+/* Responsive skeleton */
+@media screen and (min-width: 1030px) {
+  .skeleton-card {
+    align-items: flex-start;
+    text-align: left;
+    padding: 20px;
+  }
+  
+  .skeleton-icon {
+    margin-bottom: 14px;
+  }
+}
+
+/* =========================================================
+   SKELETON LOADER STYLES
+   ========================================================= */
+
+/* Animazione shimmer per skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-base {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+/* Skeleton per il saluto */
+.skeleton-greeting {
+  width: 250px;
+  height: 32px;
+  margin-bottom: 8px;
+}
+
+.skeleton-subtitle {
+  width: 300px;
+  height: 26px;
+}
+
+/* Skeleton per le card azioni */
+.skeleton-card {
+  background: #f5f5f5;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.skeleton-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-title {
+  width: 180px;
+  height: 24px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-button {
+  width: 120px;
+  height: 40px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+/* Skeleton per header e link */
+.skeleton-text {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-header {
+  width: 120px;
+  height: 24px;
+}
+
+.skeleton-link {
+  width: 100px;
+  height: 20px;
+}
+
+/* Skeleton per tabella */
+.skeleton-table {
+  width: 100%;
+}
+
+.skeleton-table-header {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.skeleton-table-row {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+}
+
+.skeleton-cell {
+  flex: 1;
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-cell:nth-child(1) {
+  flex: 2;
+}
+
+.skeleton-cell:nth-child(3) {
+  flex: 0.8;
+}
+
+/* Skeleton per profilo */
+.skeleton-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.skeleton-name {
+  width: 150px;
+  height: 22px;
+  margin-bottom: 8px;
+}
+
+.skeleton-email {
+  width: 200px;
+  height: 16px;
+}
+
+/* Responsive skeleton */
+@media screen and (min-width: 1030px) {
+  .skeleton-card {
+    align-items: flex-start;
+    text-align: left;
+    padding: 20px;
+  }
+  
+  .skeleton-icon {
+    margin-bottom: 14px;
+  }
+}

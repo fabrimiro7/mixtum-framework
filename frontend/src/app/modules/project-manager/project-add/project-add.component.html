@@ -1,0 +1,124 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Aggiungi progetto</h1>
+    </div>
+    <div class="col-md-auto text-md-right btn-bar">
+      <button id="btn-cancel" mat-raised-button class="primary-button-light" (click)="redirectTo('projects')">
+        <span>Annulla</span>
+      </button>
+      <button id="btn-add" mat-raised-button class="primary-button" (click)="addProject()">
+        <span>AGGIUNGI</span>
+        <mat-icon fontIcon="arrow_forward"></mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="ed-block-standard">
+    <div [formGroup]="projectForm" class="form">
+
+      <div class="grid grid-2">
+        <div class="w-100 tw-field">
+          <label class="tw-label">Titolo</label>
+          <input
+            class="tw-input"
+            placeholder="Titolo del progetto"
+            formControlName="title"
+          >
+          <p class="tw-error" *ngIf="projectForm.get('title')?.hasError('required')">Campo obbligatorio</p>
+        </div>
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Cliente</label>
+          <app-tw-select
+            placeholder="Seleziona il cliente"
+            formControlName="client"
+            [items]="userList"
+            bindValue="id"
+            [labelKeys]="['first_name', 'last_name']"
+          ></app-tw-select>
+          <p class="tw-error" *ngIf="projectForm.get('client')?.hasError('required')">Seleziona un cliente</p>
+        </div>
+      </div>
+
+      <div class="w-100 tw-field">
+        <label class="tw-label">Descrizione</label>
+        <textarea
+          class="tw-textarea"
+          placeholder="Descrivi qui il progetto"
+          formControlName="description"
+          rows="3"
+        ></textarea>
+        <p class="tw-error" *ngIf="projectForm.get('description')?.hasError('required')">Campo obbligatorio</p>
+      </div>
+
+      <!-- NEW RATE FIELDS -->
+      <div class="grid grid-3">
+        <div class="w-100 tw-field">
+          <label class="tw-label">Tariffa oraria minima (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="hours_quote_min"
+            placeholder="es. 50.00"
+          >
+        </div>
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Tariffa oraria media (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="hours_quote_mid"
+            placeholder="es. 60.00"
+          >
+        </div>
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Tariffa oraria massima (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="hours_quote_max"
+            placeholder="es. 70.00"
+          >
+        </div>
+      </div>
+
+      <div class="grid grid-1">
+        <div class="w-100 tw-field">
+          <label class="tw-label">Limite di costo mensile (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="month_cost_limit"
+            placeholder="es. 2000.00"
+          >
+        </div>
+      </div>
+
+      <div class="w-100 tw-field">
+        <label class="tw-label">Associati</label>
+        <app-tw-select
+          formControlName="contributors"
+          [items]="userList"
+          [labelKeys]="['first_name', 'last_name']"
+          [compareWith]="compareFn"
+          [multiple]="true"
+          placeholder="Seleziona associati"
+        ></app-tw-select>
+      </div>
+
+    </div>
+  </div>
+</div>

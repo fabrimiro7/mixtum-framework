@@ -1,0 +1,13 @@
+<div class="flex items-center gap-3 tw-field">
+  <label class="tw-label text-sm">Workspace</label>
+  <app-tw-select
+    class="py-1.5 text-sm"
+    [(ngModel)]="selectedId"
+    (selectionChange)="onWorkspaceChange()"
+    [items]="workspaces"
+    bindValue="id"
+    bindLabel="workspace_name"
+    placeholder="Seleziona workspace"
+  ></app-tw-select>
+  <span class="tw-error text-xs" *ngIf="error">{{ error }}</span>
+</div>

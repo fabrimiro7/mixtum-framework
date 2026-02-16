@@ -1,0 +1,28 @@
+.me-2 {
+  margin-right: 8px;
+}
+
+.mb-4 {
+  margin-bottom: 24px;
+}
+
+.py-4 {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+mat-slide-toggle {
+  margin-top: 16px;
+}

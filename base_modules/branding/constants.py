@@ -1,0 +1,33 @@
+ALLOWED_COLOR_KEYS = [
+    "--ed-blue-dark",
+    "--ed-blue",
+    "--ed-blue-light",
+    "--ed-yellow",
+    "--ed-purple",
+    "--ed-background",
+    "--ed-white",
+    "--ed-video-overlay",
+    "--ed-shadow-card",
+    "--ed-gray-dark",
+    "--ed-gray-text",
+    "--ed-gray-light",
+    "--ed-red",
+    "--ed-green",
+]
+
+DEFAULT_COLORS = {
+    "--ed-blue-dark": "#000027",
+    "--ed-blue": "#0c0cba",
+    "--ed-blue-light": "#0c0cba",
+    "--ed-yellow": "#b8ee38",
+    "--ed-purple": "#8660f7",
+    "--ed-background": "#F7F9FF",
+    "--ed-white": "#FFFFFF",
+    "--ed-video-overlay": "rgba(13, 22, 59, 0.2)",
+    "--ed-shadow-card": "rgba(206, 209, 217, 0.2)",
+    "--ed-gray-dark": "#9CA0AA",
+    "--ed-gray-text": "#202020",
+    "--ed-gray-light": "#DBDFEA",
+    "--ed-red": "#E05845",
+    "--ed-green": "#77C745",
+}

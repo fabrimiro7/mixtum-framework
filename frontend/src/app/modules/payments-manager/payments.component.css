@@ -1,0 +1,99 @@
+h2{
+    color: var(--ed-blue-dark);
+}
+
+#title {
+    cursor: pointer;
+  }
+
+/* Stili per i puntini colorati di stato */
+.status-dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+  }
+  
+  .status-active {
+    background-color: var(--ed-green);
+  }
+  
+  .status-expired {
+    background-color: var(--ed-red);
+  }
+
+  /*Stili per chips*/
+  .mat-chip-list {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+  }
+  
+  .mat-chip {
+    margin-right: 10px;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ed-blue) !important;
+    background-color: var(--ed-white) !important;
+  
+  }
+  
+  .mat-chip.selected {
+    background-color: var(--ed-blue) !important;
+    color: var(--ed-white) !important;
+  }
+  
+  .mat-chip:hover {
+    background-color: var(--ed-blue) !important;
+    color: var(--ed-white) !important;
+  }
+
+  /*stili lista tag*/
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 100%; /* Limita la larghezza */
+  }
+  .tag {
+    background-color: #f0f4f8;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: #333;
+    word-break: break-word; /* Evita overflow */
+  }
+  
+  .date-label {
+    font-weight: bold;
+    margin-right: 5px;
+  }
+
+  .date {
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  #status {
+    margin-top: 3px;
+  }
+  @media screen and (max-width: 767px) {
+    #btn {
+      width: 100%;
+      margin-bottom: 15px;
+      margin-top: 15px;
+      margin-left: 0px;
+    }
+  
+    .ed-block-standard {
+      margin-bottom: 15px;
+      margin-left: 0px;
+      margin-right: 0px;
+      border-radius: 25px;
+    }
+  }
+  

@@ -1,0 +1,52 @@
+.container-fluid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  width: 100%;
+}
+
+.col-md-3 {
+  background-color: var(--ed-white);
+  padding: 20px;
+  border-radius: 4px;
+  margin: 15px;
+  box-shadow: 0 4px 8px var(--ed-shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#btnFull {
+  margin: 0;
+  width: 100%;
+}
+
+#btn {
+  margin: 0px 0px 0px 10px;
+}
+
+#avviso {
+  margin: auto;
+}
+
+@media screen and (max-width: 767px) {
+  #btn { 
+      width: 100%;
+      margin: 0px 0px 15px 0px;
+  }
+
+  .col-md-3 { 
+      padding: 15px;
+  }
+}
+
+@media screen and (min-width: 768px) {
+
+  
+}

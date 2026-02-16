@@ -1,0 +1,185 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <h1 class="titolo" *ngIf="!loading">Ciao {{userProfile?.first_name}} 👋</h1>
+      <h1 class="titolo skeleton-text skeleton-greeting" *ngIf="loading"></h1>
+      <h2 class="sottotitolo" *ngIf="!loading">Come possiamo aiutarti oggi?</h2>
+      <h2 class="sottotitolo skeleton-text skeleton-subtitle" *ngIf="loading"></h2>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid" id="dashboard">
+  <!-- SKELETON LOADER: PRIMA RIGA -->
+  <div class="row g-3" *ngIf="loading">
+    <div [ngClass]="showPaymentsCard ? 'col-12 col-xl-4' : 'col-12 col-xl-6'">
+      <div class="ed-block-standard homeCard skeleton-card">
+        <div class="skeleton-icon"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-button"></div>
+      </div>
+    </div>
+    <div [ngClass]="showPaymentsCard ? 'col-12 col-xl-4' : 'col-12 col-xl-6'">
+      <div class="ed-block-standard homeCard skeleton-card">
+        <div class="skeleton-icon"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-button"></div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-4" *ngIf="showPaymentsCard">
+      <div class="ed-block-standard homeCard skeleton-card">
+        <div class="skeleton-icon"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-button"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENUTO REALE: PRIMA RIGA -->
+  <div class="row g-3" *ngIf="!loading">
+    <div [ngClass]="showPaymentsCard ? 'col-12 col-xl-4' : 'col-12 col-xl-6'">
+      <div class="ed-block-standard homeCard bg-blue-green">
+        <mat-icon class="large-icon" fontIcon="headset_mic"></mat-icon>
+        <h4 class="shortcutTitle">APRI UN TICKET</h4>
+        <p></p>
+        <button mat-raised-button id="btn" class="primary-button-home" (click)="redirectTo('tickets/add')">
+          <span>AGGIUNGI</span><mat-icon fontIcon="add"></mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div [ngClass]="showPaymentsCard ? 'col-12 col-xl-4' : 'col-12 col-xl-6'">
+      <div class="ed-block-standard homeCard bg-blue-purple">
+        <mat-icon class="large-icon" fontIcon="video_library"></mat-icon>
+        <h4 class="shortcutTitle">GUARDA UN TUTORIAL</h4>
+        <p></p>
+        <button mat-raised-button id="btn" class="primary-button-home" (click)="redirectTo('academy')">
+          <span>GUARDA</span><mat-icon fontIcon="arrow_forward"></mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4" *ngIf="showPaymentsCard">
+      <div class="ed-block-standard homeCard bg-green-orange">
+        <mat-icon class="large-icon" fontIcon="payments"></mat-icon>
+        <h4 class="shortcutTitle">RIEPILOGO PAGAMENTI</h4>
+        <p></p>
+        <button mat-raised-button id="btn" class="primary-button-home" (click)="redirectTo('payments')">
+          <span>RIEPILOGO</span><mat-icon fontIcon="arrow_forward"></mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECONDA RIGA: 3/4 ticket (col-8) + 1/4 profilo (col-4) -->
+  <div class="row mt-4">
+    <!-- SKELETON: LISTA TICKET (3/4) -->
+    <div class="col-12 col-lg-8" *ngIf="loading">
+      <div class="ed-block-standard">
+        <div class="homeCard-header">
+          <div class="skeleton-text skeleton-header"></div>
+          <div class="skeleton-text skeleton-link"></div>
+        </div>
+        <div class="skeleton-table">
+          <div class="skeleton-table-header">
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+          </div>
+          <div class="skeleton-table-row" *ngFor="let i of [1,2,3,4,5]">
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENUTO REALE: LISTA TICKET (3/4) -->
+    <div class="col-12 col-lg-8" *ngIf="!loading">
+      <div class="ed-block-standard">
+        <div class="homeCard-header">
+          <h3>Ultimi Ticket</h3>
+          <a (click)="redirectTo('tickets')" class="view-link">
+            Vedi Tutti <mat-icon fontIcon="arrow_forward"></mat-icon>
+          </a>
+        </div>
+
+        <table mat-table [dataSource]="dataSource" matSort>
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef class="text-left"> Titolo </th>
+            <td mat-cell *matCellDef="let ticket" (click)="redirectTo('tickets/' + ticket.id)" id="title" class="text-left">
+              {{ truncate(ticket.title, 50) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef> Stato </th>
+            <td mat-cell *matCellDef="let ticket">
+              <span [ngClass]="getStatusClass(ticket.status)" class="status-dot"></span>
+              {{(ticket.status == 'open' ? 'Aperto' : '') || 
+                (ticket.status == 'in_progress' ? 'Preso in carico' : '') || 
+                (ticket.status == 'resolved' ? 'Risolto' : '') || 
+                (ticket.status == 'closed' ? 'Chiuso' : '') || 
+                (ticket.status == 'da_assegnare' ? 'Da assegnare' : '')}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef class="text-right"> Azioni </th>
+            <td mat-cell *matCellDef="let ticket" class="text-right">
+              <a *ngIf="userType != 'Utente'" (click)="redirectTo('/tickets/edit/' + ticket.id)">Modifica</a>
+              <span *ngIf="userType != 'Utente'"> / </span>
+              <a (click)="redirectTo('tickets/' + ticket.id)">Visualizza</a>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- SKELETON: BOX PROFILO (1/4) -->
+    <div class="col-12 col-lg-4 mt-3 mt-lg-0" *ngIf="loading">
+      <div class="ed-block-standard">
+        <div class="homeCard-header">
+          <div class="skeleton-text skeleton-header"></div>
+          <div class="skeleton-text skeleton-link"></div>
+        </div>
+        <div class="profile-body">
+          <div class="skeleton-avatar"></div>
+          <div class="profile-info" style="flex: 1;">
+            <div class="skeleton-text skeleton-name"></div>
+            <div class="skeleton-text skeleton-email"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENUTO REALE: BOX PROFILO (1/4) -->
+    <div class="col-12 col-lg-4 mt-3 mt-lg-0" *ngIf="!loading">
+      <div class="ed-block-standard">
+        <div class="homeCard-header">
+          <h3>Profilo</h3>
+          <a (click)="redirectTo('profile')" class="view-link">
+            Visualizza <mat-icon fontIcon="arrow_forward"></mat-icon>
+          </a>
+        </div>
+        <div class="profile-body">
+          <img [src]="avatarUrl" alt="{{ userProfile?.first_name }}" class="profile-image" />
+          <div class="profile-info">
+            <p id="nomeUtente">{{ userProfile?.first_name }} {{userProfile?.last_name}}</p>
+            <p class="blueLight">{{ userProfile?.email }}</p>
+          </div>
+        </div>
+        <div class="profile-products">
+          <!--<h5 class="blueLight">Prodotto/i:</h5>
+          <div class="product-list">
+            <span class="product" *ngFor="let project of projectList">{{ project.title }}</span>
+          </div>-->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

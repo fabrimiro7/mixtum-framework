@@ -1,0 +1,206 @@
+<div class="container-fluid">
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+      <div class="col">
+        <h1>{{ isEditMode ? 'Modifica Regola Ricorrente' : 'Nuova Regola Ricorrente' }}</h1>
+      </div>
+      <div class="col-md-auto">
+        <button mat-raised-button class="primary-button-light me-2" (click)="cancel()">
+          <span>ANNULLA</span>
+        </button>
+        <button mat-raised-button class="primary-button" (click)="onSubmit()" [disabled]="saving">
+          <span>SALVA</span>
+          <mat-icon fontIcon="check"></mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="ed-block-standard">
+      <form [formGroup]="ruleForm" class="tw-form-grid">
+        <!-- Name -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Nome Regola</label>
+          <input
+            class="tw-input"
+            formControlName="name"
+            placeholder="Es: Affitto mensile"
+          >
+          <p class="tw-error" *ngIf="ruleForm.get('name')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <div class="row">
+          <!-- Type -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Tipo Movimento</label>
+            <app-tw-select
+              formControlName="transaction_type"
+              [items]="typeOptions"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <!-- Frequency -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Frequenza</label>
+            <app-tw-select
+              formControlName="frequency"
+              [items]="frequencyOptions"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Account -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Conto</label>
+            <app-tw-select
+              formControlName="account"
+              [items]="accounts"
+              bindValue="id"
+              bindLabel="name"
+            ></app-tw-select>
+            <p class="tw-error" *ngIf="ruleForm.get('account')?.hasError('required')">
+              Campo obbligatorio
+            </p>
+          </div>
+
+          <!-- Category -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Categoria</label>
+            <app-tw-select
+              formControlName="category"
+              [items]="getFilteredCategories()"
+              bindValue="id"
+              bindLabel="name"
+            ></app-tw-select>
+            <p class="tw-error" *ngIf="ruleForm.get('category')?.hasError('required')">
+              Campo obbligatorio
+            </p>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Descrizione</label>
+          <textarea
+            class="tw-textarea"
+            formControlName="description"
+            rows="2"
+          ></textarea>
+          <p class="tw-error" *ngIf="ruleForm.get('description')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <div class="row">
+          <!-- Amount -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Importo (€)</label>
+            <input
+              class="tw-input"
+              type="number"
+              formControlName="gross_amount"
+              step="0.01"
+            >
+            <p class="tw-error" *ngIf="ruleForm.get('gross_amount')?.hasError('required')">
+              Campo obbligatorio
+            </p>
+          </div>
+
+          <!-- Day of Month -->
+          <div class="col-md-4 tw-field" *ngIf="showDayOfMonth()">
+            <label class="tw-label">Giorno del Mese</label>
+            <app-tw-select
+              formControlName="day_of_month"
+              [items]="dayOfMonthOptions"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <!-- Day of Week -->
+          <div class="col-md-4 tw-field" *ngIf="showDayOfWeek()">
+            <label class="tw-label">Giorno della Settimana</label>
+            <app-tw-select
+              formControlName="day_of_week"
+              [items]="dayOfWeekOptions"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <!-- VAT -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">IVA %</label>
+            <input
+              class="tw-input"
+              type="number"
+              formControlName="vat_percentage"
+              step="0.01"
+              min="0"
+              max="100"
+            >
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Start Date -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Data Inizio</label>
+            <input
+              class="tw-input"
+              type="date"
+              formControlName="start_date"
+            >
+            <p class="tw-error" *ngIf="ruleForm.get('start_date')?.hasError('required')">
+              Campo obbligatorio
+            </p>
+          </div>
+
+          <!-- End Date -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Data Fine (opzionale)</label>
+            <input
+              class="tw-input"
+              type="date"
+              formControlName="end_date"
+            >
+            <p class="tw-help">Lasciare vuoto per ricorrenza indefinita</p>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div class="options-section">
+          <mat-slide-toggle formControlName="is_active">
+            Regola Attiva
+          </mat-slide-toggle>
+          <mat-slide-toggle formControlName="generate_as_hypothetical">
+            Genera come Ipotetico
+          </mat-slide-toggle>
+        </div>
+
+        <!-- Notes -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Note</label>
+          <textarea
+            class="tw-textarea"
+            formControlName="notes"
+            rows="2"
+          ></textarea>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

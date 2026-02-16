@@ -1,0 +1,16 @@
+export const BRANDING_COLOR_KEYS: string[] = [
+  '--ed-blue-dark',
+  '--ed-blue',
+  '--ed-blue-light',
+  '--ed-yellow',
+  '--ed-purple',
+  '--ed-background',
+  '--ed-white',
+  '--ed-video-overlay',
+  '--ed-shadow-card',
+  '--ed-gray-dark',
+  '--ed-gray-text',
+  '--ed-gray-light',
+  '--ed-red',
+  '--ed-green',
+];

@@ -1,0 +1,93 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Dettagli dell'utente</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button id="btn" mat-raised-button class="primary-button-light" (click)="redirectTo('usermanager/users-list')">
+        <mat-icon fontIcon="arrow_backward"></mat-icon>
+        <span>Torna agli utenti</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+            <div class="col-sm ed-block-standard">
+                <form [formGroup]="userProfileForm" class="ed-margin-30 tw-form-grid">
+                        <div class="row">
+                          <div class="col-sm">
+                            <div class="tw-field" style="width: 100%;">
+                                <label class="tw-label">Email</label>
+                                <input
+                                  class="tw-input"
+                                  placeholder="Email"
+                                  formControlName="email"
+                                >
+                              </div>
+                          </div>
+                          <div class="col-sm">
+                            <div class="tw-field" style="width: 100%;">
+                                <label class="tw-label">Codice Fiscale</label>
+                                <input
+                                  class="tw-input"
+                                  placeholder="Codice Fiscale"
+                                  formControlName="fiscal_code"
+                                >
+                              </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                          <div class="col-sm">
+                            <div class="tw-field" style="width: 100%;">
+                                <label class="tw-label">Nome</label>
+                                <input
+                                  class="tw-input"
+                                  placeholder="Nome"
+                                  formControlName="first_name"
+                                >
+                              </div>
+                          </div>
+                          <div class="col-sm">
+                            <div class="tw-field" style="width: 100%;">
+                                <label class="tw-label">Cognome</label>
+                                <input
+                                  class="tw-input"
+                                  placeholder="Cognome"
+                                  formControlName="last_name"
+                                >
+                              </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-sm">
+                            <div class="tw-field" style="width: 100%;">
+                                <label class="tw-label">Telefono</label>
+                                <input
+                                  class="tw-input"
+                                  placeholder="Telefono"
+                                  formControlName="phone"
+                                >
+                              </div>
+                          </div>
+                          <div class="col-sm">
+                            <div class="tw-field" style="width: 100%;">
+                                <label class="tw-label">Cellulare</label>
+                                <input
+                                  class="tw-input"
+                                  placeholder="Cellulare"
+                                  formControlName="mobile"
+                                >
+                              </div>
+                            </div>
+                        </div>
+                    <button id="btnForm" mat-raised-button class="primary-button" *ngIf="isEditing == false" (click)="editProfile()">Modifica</button>
+                    <button id="btnForm" mat-raised-button class="primary-button-light" *ngIf="isEditing == true" (click)="closeEditProfile()">Chiudi</button>
+                    <button id="btnForm" mat-raised-button class="primary-button" *ngIf="isEditing == true" (click)="saveChangesProfile()">Salva</button>
+                  </form>
+            </div>
+
+</div>

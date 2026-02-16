@@ -1,0 +1,120 @@
+/* --- Bottoni header --- */
+#btnFull { width: 100%; vertical-align: middle; margin: 0; }
+#btn { margin: 0; }
+
+/* --- Titolo cliccabile --- */
+#title { cursor: pointer; }
+
+/* --- Chip filtri gerarchici --- */
+.filter-tabs-main { margin-bottom: 8px; }
+.mat-chip-list { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+.main-filter-chip {
+  margin-right: 10px; border-radius: 5px; padding: 10px 20px; font-size: 15px; font-weight: 700; cursor: pointer;
+  color: var(--ed-blue) !important; background-color: var(--ed-white) !important; border: 2px solid var(--ed-blue) !important;
+}
+.main-filter-chip.selected, .main-filter-chip:hover { background-color: var(--ed-blue) !important; color: var(--ed-white) !important; }
+.sub-filter-chip {
+  margin-right: 8px; border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer;
+  color: #6b7280 !important; background-color: #f9fafb !important; border: 1px solid #e5e7eb !important;
+}
+.sub-filter-chip.selected { background-color: var(--ed-blue) !important; color: var(--ed-white) !important; border-color: var(--ed-blue) !important; font-weight: 600; }
+.sub-filter-chip:hover { background-color: #f3f4f6 !important; border-color: var(--ed-blue) !important; }
+
+.filter-row-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.project-filter-field {
+  min-width: 200px;
+  max-width: 280px;
+  margin-left: auto;
+}
+
+/* --- Riga con messaggi non letti --- */
+.row-unread { background-color: rgba(184, 238, 56, 0.15) !important; }
+.awaiting-response { color: var(--ed-blue); font-size: 12px; font-weight: 600; }
+
+.comfortable-table {
+    width: 100%;
+}
+
+/* --- Tabella: spacing comodo --- */
+.comfortable-table .mat-header-cell,
+.comfortable-table .mat-cell { padding: 12px 20px; vertical-align: middle; }
+/* Per Angular Material MDC */
+:host ::ng-deep .comfortable-table .mat-mdc-header-cell,
+:host ::ng-deep .comfortable-table .mat-mdc-cell { padding: 12px 20px; }
+
+/* --- Larghezze utili --- */
+.mat-column-id { width: 90px; white-space: nowrap; }
+.mat-column-awaiting_response { width: 140px; white-space: nowrap; }
+.mat-column-client { width: 180px; white-space: nowrap; }
+.mat-column-status { width: 160px; white-space: nowrap; }
+.mat-column-priority { width: 120px; white-space: nowrap; }
+.mat-column-assignee { width: 110px; }
+.mat-column-date { width: 180px; white-space: nowrap; }
+.mat-column-action { width: 64px; text-align: right; }
+.mat-column-title { width: auto; }
+
+/* --- Titolo + sottotitolo progetto --- */
+.title-wrap { display: flex; flex-direction: column; gap: 2px; line-height: 1.2; }
+.title-main { color: var(--ed-blue-dark); font-weight: 600; }
+.title-sub { font-size: 12px; color: #6b7280; } /* grigio neutro */
+
+/* --- Azioni --- */
+.action-cell { text-align: right; }
+
+/* --- Stato: puntino + colori --- */
+.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.status-open { background-color: var(--ed-green); }
+.status-in-progress { background-color: var(--ed-purple); }
+.status-resolved { background-color: var(--ed-blue-light); }
+.status-closed { background-color: var(--ed-red); }
+
+/* --- Priorità (badge) --- */
+.high-priority,
+.medium-priority,
+.low-priority {
+  font-weight: bold; font-size: 12px; padding: 2px 6px; border-radius: 5px;
+  display: inline-block; text-align: center; margin-right: 10px; border: 1px solid transparent;
+}
+.high-priority { color: var(--ed-red); background-color: #f1c5c2; border-color: var(--ed-red); }
+.medium-priority { color: #eeba00; background-color: #f1e3c2; border-color: #eeba00; }
+.low-priority { color: var(--ed-green); background-color: #c2f1cb; border-color: var(--ed-green); }
+
+/* --- Assegnatario (avatar) --- */
+.assignee-cell { display: flex; align-items: center; gap: 6px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #e6e6e6; }
+.avatar.initials {
+  width: 32px; height: 32px; border-radius: 50%; display: inline-flex;
+  align-items: center; justify-content: center; font-weight: 600; font-size: 12px; color: #333;
+}
+.more-count {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; background: #f1f1f1;
+}
+
+/* --- Mobile card --- */
+.mobile { margin: 20px 0 0; padding-left: 0; padding-right: 0; }
+.ed-block-standard { margin-bottom: 15px; }
+.mobile-card { padding: 12px; border: 0px solid #eee; border-radius: 10px; background: #fff; }
+.mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mobile-title { cursor: pointer; flex: 1; }
+.mobile-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.mobile-status { font-size: 13px; color: #374151; }
+.mobile-priority { font-size: 12px; }
+.mobile-row { display: flex; justify-content: left; margin-top: 6px; font-size: 13px; }
+.mobile-label { color: #6b7280; }
+.mobile-value { color: #111827; margin-left: 3px; }
+
+h5 { color: var(--ed-blue-dark); }
+#dx { padding-right: 0; justify-self: end; }
+.row { display: flex; }
+
+@media (max-width: 767px) {
+  #btn { width: 100%; margin-bottom: 15px; }
+  .ed-block-standard { margin: 0 0 15px; }
+}

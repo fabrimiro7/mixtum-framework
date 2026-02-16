@@ -14,6 +14,7 @@ from django.db import transaction as db_transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 from .models import (
     Block,
@@ -33,6 +34,7 @@ from .serializers import (
     BlockSerializer,
     CreateDocumentFromTemplateSerializer,
     DocumentBlockSerializer,
+    DocumentBlockWriteSerializer,
     DocumentCategorySerializer,
     DocumentSerializer,
     DocumentSignerEventSerializer,
@@ -54,6 +56,7 @@ from .services import (
     freeze_document,
     render_document,
 )
+from .permissions import get_workspace_id_from_request
 
 
 # ===================================================================
@@ -65,7 +68,7 @@ class DocumentTypeViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
 
 class DocumentCategoryViewSet(WorkspaceMixin, viewsets.ModelViewSet):
@@ -73,7 +76,7 @@ class DocumentCategoryViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
     queryset = DocumentCategory.objects.all()
     serializer_class = DocumentCategorySerializer
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
 
 class DocumentStatusViewSet(WorkspaceMixin, viewsets.ModelViewSet):
@@ -86,7 +89,7 @@ class DocumentStatusViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
     queryset = DocumentStatus.objects.all()
     serializer_class = DocumentStatusSerializer
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
 
 # ===================================================================
@@ -98,7 +101,7 @@ class BlockViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
     queryset = Block.objects.all()
     serializer_class = BlockSerializer
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
 
 class DocumentTemplateViewSet(WorkspaceMixin, viewsets.ModelViewSet):
@@ -111,7 +114,7 @@ class DocumentTemplateViewSet(WorkspaceMixin, viewsets.ModelViewSet):
     """
 
     queryset = DocumentTemplate.objects.prefetch_related("template_blocks__block")
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
     def get_serializer_class(self):
         if self.action in ("create", "update", "partial_update"):
@@ -173,6 +176,71 @@ class DocumentTemplateViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
 
 # ===================================================================
+# Template Blocks (CRUD)
+# ===================================================================
+
+class DocumentTemplateBlockViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for template blocks.
+    Scoped by workspace through the template relation.
+    """
+
+    queryset = DocumentTemplateBlock.objects.select_related("template", "block")
+    #permission_classes = [IsWorkspaceMember]
+
+    def get_serializer_class(self):
+        if self.action in ("create", "update", "partial_update"):
+            return DocumentTemplateBlockWriteSerializer
+        return DocumentTemplateBlockSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        ws_id = self.request.META.get("HTTP_X_WORKSPACE_ID")
+        if ws_id:
+            qs = qs.filter(template__workspace_id=ws_id)
+        return qs
+
+    def perform_create(self, serializer):
+        template = serializer.validated_data.get("template")
+        if not template:
+            raise ValidationError({"template": "Template is required."})
+
+        ws_id = get_workspace_id_from_request(self.request)
+        if template.workspace_id != ws_id:
+            raise ValidationError({"detail": "Template does not belong to workspace."})
+
+        # Auto-append if position missing
+        if serializer.validated_data.get("position") is None:
+            last = (
+                DocumentTemplateBlock.objects
+                .filter(template=template)
+                .order_by("-position")
+                .first()
+            )
+            serializer.validated_data["position"] = (last.position + 1) if last else 0
+
+        serializer.save()
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        template = serializer.validated_data.get("template", instance.template)
+        if template.pk != instance.template_id:
+            raise ValidationError({"template": "Changing template is not allowed."})
+
+        ws_id = get_workspace_id_from_request(self.request)
+        if template.workspace_id != ws_id:
+            raise ValidationError({"detail": "Template does not belong to workspace."})
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        ws_id = get_workspace_id_from_request(self.request)
+        if instance.template.workspace_id != ws_id:
+            raise ValidationError({"detail": "Template does not belong to workspace."})
+        super().perform_destroy(instance)
+
+
+# ===================================================================
 # Document Instances
 # ===================================================================
 
@@ -190,7 +258,7 @@ class DocumentViewSet(WorkspaceMixin, viewsets.ModelViewSet):
     queryset = Document.objects.prefetch_related(
         "blocks", "category_assignments__category"
     ).select_related("status", "type", "template")
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
     def get_serializer_class(self):
         if self.action in ("create", "update", "partial_update"):
@@ -285,6 +353,68 @@ class DocumentViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
 
 # ===================================================================
+# Document Blocks (CRUD)
+# ===================================================================
+
+class DocumentBlockViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for document blocks.
+    Scoped by workspace through the document relation.
+    """
+
+    queryset = DocumentBlock.objects.select_related("document")
+    #permission_classes = [IsWorkspaceMember]
+
+    def get_serializer_class(self):
+        if self.action in ("create", "update", "partial_update"):
+            return DocumentBlockWriteSerializer
+        return DocumentBlockSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        ws_id = self.request.META.get("HTTP_X_WORKSPACE_ID")
+        if ws_id:
+            qs = qs.filter(document__workspace_id=ws_id)
+        return qs
+
+    def _ensure_document_editable(self, document: Document):
+        ws_id = get_workspace_id_from_request(self.request)
+        if document.workspace_id != ws_id:
+            raise ValidationError({"detail": "Document does not belong to workspace."})
+        if not document.is_editable:
+            raise ValidationError({"detail": "Document is not editable."})
+
+    def perform_create(self, serializer):
+        document = serializer.validated_data.get("document")
+        if not document:
+            raise ValidationError({"document": "Document is required."})
+        self._ensure_document_editable(document)
+
+        if serializer.validated_data.get("position") is None:
+            last = (
+                DocumentBlock.objects
+                .filter(document=document)
+                .order_by("-position")
+                .first()
+            )
+            serializer.validated_data["position"] = (last.position + 1) if last else 0
+
+        serializer.save()
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        document = serializer.validated_data.get("document", instance.document)
+        if document.pk != instance.document_id:
+            raise ValidationError({"document": "Changing document is not allowed."})
+        self._ensure_document_editable(document)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._ensure_document_editable(instance.document)
+        super().perform_destroy(instance)
+
+
+# ===================================================================
 # Signers
 # ===================================================================
 
@@ -293,7 +423,7 @@ class PartyViewSet(WorkspaceMixin, viewsets.ModelViewSet):
 
     queryset = Party.objects.all()
     serializer_class = PartySerializer
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
 
 class DocumentSignerViewSet(viewsets.ModelViewSet):
@@ -310,7 +440,7 @@ class DocumentSignerViewSet(viewsets.ModelViewSet):
     queryset = DocumentSigner.objects.select_related(
         "party", "document"
     ).prefetch_related("events")
-    permission_classes = [IsWorkspaceMember]
+    #permission_classes = [IsWorkspaceMember]
 
     def get_serializer_class(self):
         if self.action in ("create", "update", "partial_update"):

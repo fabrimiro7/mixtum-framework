@@ -1,0 +1,37 @@
+<div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1>Tutorials</h1>
+      </div>
+      <div class="col-md-auto text-md-right">
+        <button *ngIf="userType !== 'Utente'" id="btn" mat-raised-button class="primary-button-light" (click)="redirectTo('academy/category/add')">
+            <span>AGGIUNGI CATEGORIA</span>
+            <mat-icon fontIcon="add"></mat-icon>
+          </button>
+        <button *ngIf="userType !== 'Utente'" id="btn" mat-raised-button class="primary-button" (click)="redirectTo('academy/tutorial/add')">
+          <span>AGGIUNGI TUTORIAL</span>
+          <mat-icon fontIcon="add"></mat-icon>
+        </button>       
+      </div>
+    </div>
+  </div>
+
+<div *ngIf="tutorials.length !== 0" class="container-fluid">
+    <div class="row">
+    <div *ngFor="let tutorial of tutorials" class="col-md-3">     
+     
+         <img [src]= "getMiniature(tutorial.id)" width="100%" style="border-radius: 4px;">
+         <h4 style="margin-top: 10px;">{{tutorial.title}}</h4>
+         <!--<p style="min-height: 100px">{{ truncate(tutorial.description, 100)}}</p>-->
+         <div>
+         <button id="btnFull" mat-raised-button class="primary-button" (click)="redirectTo('academy/tutorial-details/' + tutorial.id)">SCHEDA VIDEO</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<div *ngIf="tutorials.length === 0" class="container-fluid">
+  <div class="ed-block-standard" id="avviso">
+    <h4 >Nessun tutorial assegnato!</h4>
+  </div>
+</div>

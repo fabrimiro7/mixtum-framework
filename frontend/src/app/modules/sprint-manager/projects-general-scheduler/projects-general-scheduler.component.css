@@ -1,0 +1,261 @@
+.schedule-shell {
+  padding: 20px;
+}
+
+.tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.task-view-toggle button {
+  margin-left: 4px;
+}
+
+.task-view-toggle button.active mat-icon {
+  color: #1d4ed8;
+}
+
+.links-loading,
+.links-empty {
+  font-size: 14px;
+  color: #666;
+}
+
+.task-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.task-list-header,
+.task-list-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px 18px;
+  align-items: center;
+}
+
+.task-list-header {
+  background: #f9fafb;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.task-list-row {
+  border-top: 1px solid #fff;
+}
+
+.task-title {
+  font-weight: 600;
+  color: #111827;
+}
+
+.task-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.task-card-project {
+  font-size: 12px;
+  color: #4b5563;
+  display: block;
+}
+
+.priority-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.priority-low {
+  background: #ecfccb;
+  color: #4d7c0f;
+}
+
+.priority-medium {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.priority-high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.task-kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.kanban-column {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kanban-column-header {
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.kanban-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.task-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-card.cdk-drag-preview,
+.timeline-bar.cdk-drag-preview {
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+}
+
+.task-card.cdk-drag-placeholder,
+.timeline-bar.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.task-card-title {
+  font-weight: 600;
+  color: #111827;
+}
+
+.task-card-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.task-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.task-card-due {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.kanban-empty {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.task-timeline {
+  margin-top: 16px;
+}
+
+.timeline-scroll {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.timeline-header {
+  display: flex;
+}
+
+.timeline-label-space {
+  font-weight: 600;
+  padding: 16px;
+}
+
+.timeline-days {
+  display: grid;
+}
+
+.timeline-day-cell {
+  padding: 12px;
+  font-size: 12px;
+  text-align: center;
+  color: #4b5563;
+  background: #f9fafb;
+}
+
+.timeline-row {
+  display: flex;
+}
+
+.timeline-label {
+  min-width: 160px;
+  padding: 16px;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+}
+
+.timeline-track {
+  position: relative;
+}
+
+.timeline-bar {
+  position: absolute;
+  top: 8px;
+  height: 32px;
+  border-radius: 16px;
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-size: 12px;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+}
+
+.timeline-bar:active {
+  cursor: grabbing;
+}
+
+.timeline-bar small {
+  font-size: 10px;
+  color: #1f2937;
+}
+
+.phase-project {
+  font-size: 11px;
+  color: #374151;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .task-list-header,
+  .task-list-row {
+    grid-template-columns: 1fr;
+  }
+}

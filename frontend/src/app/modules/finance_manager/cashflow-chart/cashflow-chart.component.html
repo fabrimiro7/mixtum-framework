@@ -1,0 +1,203 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row align-items-center mb-4">
+    <div class="col">
+      <h1>Andamento Cashflow</h1>
+    </div>
+    <div class="col-md-auto">
+      <button mat-raised-button class="primary-button-light me-2" (click)="navigateTo('/finance')">
+        <mat-icon fontIcon="arrow_back"></mat-icon>
+        <span>MOVIMENTI</span>
+      </button>
+      <button mat-raised-button class="primary-button" (click)="navigateTo('/finance/simulation')">
+        <mat-icon fontIcon="trending_up"></mat-icon>
+        <span>SIMULAZIONE</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="summary-card income-card">
+        <div class="summary-icon">
+          <mat-icon>arrow_upward</mat-icon>
+        </div>
+        <div class="summary-content">
+          <span class="summary-label">Totale Entrate</span>
+          <span class="summary-value">{{ formatCurrency(totalIncome) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="summary-card expense-card">
+        <div class="summary-icon">
+          <mat-icon>arrow_downward</mat-icon>
+        </div>
+        <div class="summary-content">
+          <span class="summary-label">Totale Uscite</span>
+          <span class="summary-value">{{ formatCurrency(totalExpenses) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="summary-card" [ngClass]="netCashflow >= 0 ? 'net-positive' : 'net-negative'">
+        <div class="summary-icon">
+          <mat-icon>{{ netCashflow >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+        </div>
+        <div class="summary-content">
+          <span class="summary-label">Saldo Netto</span>
+          <span class="summary-value">{{ formatCurrency(netCashflow) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="ed-block-standard mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-2 tw-field">
+        <label class="tw-label">Conto</label>
+        <app-tw-select
+          [(ngModel)]="selectedAccount"
+          (selectionChange)="onFilterChange()"
+          [items]="accountFilterOptions"
+          bindValue="id"
+          bindLabel="name"
+        ></app-tw-select>
+      </div>
+      <div class="col-md-2 tw-field">
+        <label class="tw-label">Da</label>
+        <input
+          class="tw-input"
+          type="date"
+          [(ngModel)]="dateFrom"
+          (change)="onFilterChange()"
+        >
+      </div>
+      <div class="col-md-2 tw-field">
+        <label class="tw-label">A</label>
+        <input
+          class="tw-input"
+          type="date"
+          [(ngModel)]="dateTo"
+          (change)="onFilterChange()"
+        >
+      </div>
+      <div class="col-md-3">
+        <mat-chip-list>
+          <mat-chip [selected]="granularity === 'month'" (click)="setGranularity('month')">
+            Mensile
+          </mat-chip>
+          <mat-chip [selected]="granularity === 'year'" (click)="setGranularity('year')">
+            Annuale
+          </mat-chip>
+        </mat-chip-list>
+      </div>
+      <div class="col-md-3 text-end">
+        <button mat-button (click)="toggleChartType()">
+          <mat-icon>{{ chartType === 'bar' ? 'show_chart' : 'bar_chart' }}</mat-icon>
+          {{ chartType === 'bar' ? 'Grafico a linee' : 'Grafico a barre' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Main Chart -->
+  <div class="ed-block-standard mb-4" *ngIf="!loading && cashflowData.length > 0">
+    <h3>Andamento Entrate e Uscite</h3>
+    
+    <!-- Bar Chart -->
+    <ngx-charts-bar-vertical-2d
+      *ngIf="chartType === 'bar'"
+      [view]="view"
+      [results]="cashflowData"
+      [scheme]="$any(colorScheme)"
+      [gradient]="gradient"
+      [xAxis]="showXAxis"
+      [yAxis]="showYAxis"
+      [legend]="showLegend"
+      [legendPosition]="$any(legendPosition)"
+      [showXAxisLabel]="showXAxisLabel"
+      [showYAxisLabel]="showYAxisLabel"
+      [xAxisLabel]="xAxisLabel"
+      [yAxisLabel]="yAxisLabel"
+      [yAxisTickFormatting]="yAxisTickFormatting"
+      [barPadding]="8"
+      [groupPadding]="16">
+    </ngx-charts-bar-vertical-2d>
+
+    <!-- Line Chart -->
+    <ngx-charts-line-chart
+      *ngIf="chartType === 'line'"
+      [view]="view"
+      [results]="cashflowData"
+      [scheme]="$any(colorScheme)"
+      [gradient]="gradient"
+      [xAxis]="showXAxis"
+      [yAxis]="showYAxis"
+      [legend]="showLegend"
+      [legendPosition]="$any(legendPosition)"
+      [showXAxisLabel]="showXAxisLabel"
+      [showYAxisLabel]="showYAxisLabel"
+      [xAxisLabel]="xAxisLabel"
+      [yAxisLabel]="yAxisLabel"
+      [yAxisTickFormatting]="yAxisTickFormatting"
+      [autoScale]="true">
+    </ngx-charts-line-chart>
+  </div>
+
+  <!-- Category Breakdown -->
+  <div class="row" *ngIf="!loading">
+    <!-- Income by Category -->
+    <div class="col-md-6">
+      <div class="ed-block-standard">
+        <h3>Entrate per Categoria</h3>
+        <ngx-charts-pie-chart
+          *ngIf="categoryIncomeData.length > 0"
+          [view]="[400, 300]"
+          [results]="categoryIncomeData"
+          [scheme]="$any(categoryColorScheme)"
+          [legend]="true"
+          [legendPosition]="$any('below')"
+          [labels]="true"
+          [doughnut]="true">
+        </ngx-charts-pie-chart>
+        <div *ngIf="categoryIncomeData.length === 0" class="text-center py-4">
+          <p class="text-muted">Nessun dato disponibile</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expense by Category -->
+    <div class="col-md-6">
+      <div class="ed-block-standard">
+        <h3>Uscite per Categoria</h3>
+        <ngx-charts-pie-chart
+          *ngIf="categoryExpenseData.length > 0"
+          [view]="[400, 300]"
+          [results]="categoryExpenseData"
+          [scheme]="$any(categoryColorScheme)"
+          [legend]="true"
+          [legendPosition]="$any('below')"
+          [labels]="true"
+          [doughnut]="true">
+        </ngx-charts-pie-chart>
+        <div *ngIf="categoryExpenseData.length === 0" class="text-center py-4">
+          <p class="text-muted">Nessun dato disponibile</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && cashflowData.length === 0" class="ed-block-standard text-center py-4">
+    <mat-icon class="empty-icon">insert_chart_outlined</mat-icon>
+    <p>Nessun dato disponibile per il periodo selezionato</p>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+# netlify.toml (mettilo nella root del repo)
+[build]
+  command = "npm ci && npm run build:netlify"
+  publish = "dist/frontend/browser"
+
+# Angular SPA fallback per routing lato client
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

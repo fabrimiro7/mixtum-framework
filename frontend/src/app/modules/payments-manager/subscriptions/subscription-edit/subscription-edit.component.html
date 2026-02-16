@@ -1,0 +1,97 @@
+<div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1>Modifica Abbonamento </h1>
+      </div>
+      <div class="col-md-auto text-md-right">
+        <button id="btn" mat-raised-button class="primary-button-light"
+          (click)="redirectTo('/payments/subscription/' + idSubscription)"><span>ANNULLA</span>
+        </button>
+        <button  id="btn" mat-raised-button class="primary-button"
+          (click)="saveSubscription()">
+          <span>SALVA MODIFICHE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="ed-block-standard">
+        <div [formGroup]="subscriptionForm" class="form">
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Titolo</label>
+              <textarea
+                class="tw-textarea"
+                placeholder="Titolo dell'abbonamento"
+                formControlName="title"
+              ></textarea>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Descrizione</label>
+              <textarea
+                class="tw-textarea"
+                placeholder="Descrizione dell'abbonamento"
+                formControlName="description"
+              ></textarea>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Cliente</label>
+              <app-tw-select
+                placeholder="Associa l'abbonamento ad un cliente"
+                formControlName="customer"
+                [items]="customerList"
+                bindValue="id"
+                [labelKeys]="['first_name', 'last_name']"
+              ></app-tw-select>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Associa Prodotti</label>
+              <app-tw-select
+                placeholder="Associa l'abbonamento ad un prodotto"
+                formControlName="project"
+                [items]="projectList"
+                bindValue="id"
+                bindLabel="title"
+                [multiple]="true"
+              ></app-tw-select>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Data Inizio</label>
+              <input
+                class="tw-input"
+                type="date"
+                placeholder="Data inizio abbonamento"
+                formControlName="start_date"
+              >
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Data Fine</label>
+              <input
+                class="tw-input"
+                type="date"
+                placeholder="Data fine abbonamento"
+                formControlName="end_date"
+              >
+            </div>
+            <div class="tw-field" style="width: 100%">
+              <label class="tw-label">Importo</label>
+              <input
+                class="tw-input"
+                type="number"
+                placeholder="Importo dell'abbonamento"
+                formControlName="amount"
+              >
+             </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Stato</label>
+              <app-tw-select
+                placeholder="Seleziona uno stato"
+                formControlName="status"
+                [items]="[{ value: 'active', label: 'Attivo' }, { value: 'expired', label: 'Scaduto' }]"
+                bindValue="value"
+                bindLabel="label"
+              ></app-tw-select>
+          </div>
+        </div>
+    </div>
+</div>

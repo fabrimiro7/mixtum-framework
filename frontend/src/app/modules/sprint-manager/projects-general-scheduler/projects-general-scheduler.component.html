@@ -1,0 +1,132 @@
+<div class="container-fluid schedule-shell">
+  <div class="tasks-header">
+    <h4>Fasi di progetto globali</h4>
+    <div class="task-view-toggle">
+      <button mat-icon-button type="button" aria-label="Visualizzazione lista"
+              [class.active]="viewMode === 'list'"
+              (click)="changeView('list')">
+        <mat-icon fontIcon="view_list"></mat-icon>
+      </button>
+      <button mat-icon-button type="button" aria-label="Visualizzazione kanban"
+              [class.active]="viewMode === 'board'"
+              (click)="changeView('board')">
+        <mat-icon fontIcon="view_kanban"></mat-icon>
+      </button>
+      <button mat-icon-button type="button" aria-label="Visualizzazione timeline"
+              [class.active]="viewMode === 'timeline'"
+              (click)="changeView('timeline')">
+        <mat-icon fontIcon="timeline"></mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="phasesLoading" class="links-loading">Caricamento fasi...</div>
+
+  <ng-container *ngIf="!phasesLoading">
+    <div class="links-empty" *ngIf="!phases.length">
+      Nessuna fase di progetto presente.
+    </div>
+
+    <div *ngIf="phases.length">
+      <div *ngIf="viewMode === 'list'" class="task-list">
+        <div class="task-list-header">
+          <span>Fase</span>
+          <span>Progetto</span>
+          <span>Assegnato a</span>
+          <span>Priorità</span>
+          <span>Stato</span>
+          <span>Scadenza</span>
+        </div>
+        <div class="task-list-row" *ngFor="let phase of phases">
+          <div class="cell">
+            <div class="task-title">{{ phase.title }}</div>
+            <p class="task-desc" *ngIf="phase.description">{{ phase.description }}</p>
+          </div>
+          <div class="cell">
+            {{ phase.project?.title || '—' }}
+          </div>
+          <div class="cell">
+            {{ phase.owner ? (phase.owner.first_name + ' ' + phase.owner.last_name) : '-' }}
+          </div>
+          <div class="cell">
+            <span class="priority-chip" [ngClass]="'priority-' + phase.priority">
+              {{ phase.priority_display || phase.priority }}
+            </span>
+          </div>
+          <div class="cell">{{ phase.status_display || phase.status }}</div>
+          <div class="cell">{{ phase.due_date || '-' }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="viewMode === 'board'" class="task-kanban">
+        <div class="kanban-column" *ngFor="let column of statuses">
+          <div class="kanban-column-header">{{ column.label }}</div>
+          <div class="kanban-column-body"
+               cdkDropList
+               [id]="'general-phase-kanban-' + column.value"
+               [cdkDropListData]="phasesByStatusMap[column.value]"
+               [cdkDropListConnectedTo]="kanbanListIds"
+               (cdkDropListDropped)="onPhaseDrop($event, column.value)">
+            <div class="task-card" *ngFor="let phase of phasesByStatusMap[column.value]" cdkDrag>
+              <div class="task-card-title">{{ phase.title }}</div>
+              <p class="task-card-desc" *ngIf="phase.description">{{ phase.description }}</p>
+              <div class="task-card-meta">
+                <span class="priority-chip" [ngClass]="'priority-' + phase.priority">
+                  {{ phase.priority_display || phase.priority }}
+                </span>
+                <span class="task-assignee" *ngIf="phase.owner">
+                  {{ phase.owner.first_name }} {{ phase.owner.last_name }}
+                </span>
+              </div>
+              <div class="task-card-due" *ngIf="phase.due_date">
+                <mat-icon fontIcon="event"></mat-icon>
+                <span>{{ phase.due_date }}</span>
+              </div>
+              <div class="task-card-project" *ngIf="phase.project?.title">
+                Progetto: {{ phase.project?.title }}
+              </div>
+            </div>
+            <div class="kanban-empty" *ngIf="!(phasesByStatusMap[column.value]?.length)">
+              Nessuna fase
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="viewMode === 'timeline' && timelineDays.length" class="task-timeline">
+        <div class="timeline-scroll">
+          <div class="timeline-header">
+            <div class="timeline-label-space sticky-label">Fase</div>
+            <div class="timeline-days"
+                 [style.width.px]="timelineWidth"
+                 [style.gridTemplateColumns]="'repeat(' + timelineDays.length + ', ' + timelineDayWidth + 'px)'">
+              <div class="timeline-day-cell" *ngFor="let day of timelineDays">
+                {{ day | date:'dd MMM' }}
+              </div>
+            </div>
+          </div>
+          <div class="timeline-row" *ngFor="let group of projectGroups">
+            <div class="timeline-label sticky-label">{{ group.project?.title || 'Progetto sconosciuto' }}</div>
+            <div class="timeline-track" [style.width.px]="timelineWidth" [style.minWidth.px]="timelineWidth">
+              <div
+                class="timeline-bar"
+                *ngFor="let phase of group.phases"
+                cdkDrag
+                cdkDragLockAxis="x"
+                (cdkDragEnded)="onPhaseTimelineDragEnded($event, phase)"
+                [style.left.px]="phaseOffsetDays(phase) * timelineDayWidth"
+                [style.width.px]="phaseDurationDays(phase) * timelineDayWidth">
+                <span>{{ phase.owner ? (phase.owner.first_name + ' ' + phase.owner.last_name) : 'Non assegnato' }}</span>
+                <small *ngIf="phase.start_date && phase.due_date">{{ phase.start_date }} → {{ phase.due_date }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="viewMode === 'timeline' && !timelineDays.length" class="links-empty">
+        Nessuna informazione sulla timeline disponibile.
+      </div>
+    </div>
+  </ng-container>
+</div>

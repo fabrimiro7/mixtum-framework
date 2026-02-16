@@ -1,0 +1,22 @@
+.options-section {
+  display: flex;
+  gap: 32px;
+  margin: 24px 0;
+}
+
+.me-2 {
+  margin-right: 8px;
+}
+
+.mb-4 {
+  margin-bottom: 24px;
+}
+
+.py-4 {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.w-100 {
+  width: 100%;
+}

@@ -1,0 +1,99 @@
+<div class="container-fluid">
+  <h1>Profilo</h1>
+</div>
+
+
+<div *ngIf="userProfile">
+    <div class="user-profile-container">
+
+        <div class="left-block">
+          <app-avatar [idUser]="idUser" [avatarUrl]="avatarUrl"></app-avatar>
+        </div>
+
+        <div class="right-block">
+          <h3>Dettagli utente</h3>
+          <form [formGroup]="userProfileForm" class="ed-margin-30 tw-form-grid">
+            <div class="user-info">
+              <div class="container">
+                <div class="row">
+                  <div class="col-sm">
+                    <div class="tw-field" style="width: 100%;">
+                      <label class="tw-label">Nome</label>
+                      <input
+                        class="tw-input"
+                        placeholder="Nome"
+                        formControlName="first_name"
+                      >
+                    </div>
+                    
+                  </div>
+                  <div class="col-sm">
+                    <div class="tw-field" style="width: 100%;">
+                      <label class="tw-label">Cognome</label>
+                      <input
+                        class="tw-input"
+                        placeholder="Cognome"
+                        formControlName="last_name"
+                      >
+                    </div>
+                    </div>
+                </div>
+              </div>
+              <div class="container">
+                
+                  <div class="tw-field" style="width: 100%;">
+                    <label class="tw-label">Codice Fiscale</label>
+                    <input
+                      class="tw-input"
+                      placeholder="Codice Fiscale"
+                      formControlName="fiscal_code"
+                    >
+                  </div>
+                
+                
+                  <div class="tw-field" style="width: 100%;">
+                    <label class="tw-label">Email</label>
+                    <input
+                      class="tw-input"
+                      placeholder="Email"
+                      formControlName="email"
+                    >
+                  </div>
+                
+              </div>
+              <div class="container">
+                <div class="row">
+                  <div class="col-sm">
+                    <div class="tw-field" style="width: 100%;">
+                        <label class="tw-label">Telefono</label>
+                        <input
+                          class="tw-input"
+                          placeholder="Telefono"
+                          formControlName="phone"
+                        >
+                      </div>
+                  </div>
+                  <div class="col-sm">
+                    <div class="tw-field" style="width: 100%;">
+                        <label class="tw-label">Cellulare</label>
+                        <input
+                          class="tw-input"
+                          placeholder="Cellulare"
+                          formControlName="mobile"
+                        >
+                      </div>
+                    </div>
+                </div>
+                <button mat-raised-button class="primary-button" *ngIf="isEditing == false" (click)="editProfile()">Modifica</button>
+                <button mat-raised-button class="primary-button-light" *ngIf="isEditing == true" (click)="closeEditProfile()">Chiudi</button>
+                <button mat-raised-button class="primary-button" *ngIf="isEditing == true" (click)="saveChangesProfile()">Salva</button>
+              </div>
+
+            </div>
+          
+          </form>
+        </div>
+      </div>      
+</div>
+  
+  

@@ -1,0 +1,265 @@
+.icon-text {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.icon-text mat-icon {
+  margin-right: 8px;
+  color: var(--ed-blue-light);
+
+}
+
+hr {
+  color: var(--ed-gray-light);
+}
+
+.messageBubbleLeft {
+  padding: 3%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: var(--ed-gray-light);
+  border-radius: 4px 4px 4px 0px;
+  position: relative;
+
+}
+
+.messageBubbleLeft::before {
+  content: "";
+  position: absolute;
+  bottom: 0px;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 0px solid transparent;
+  border-right: 10px solid var(--ed-gray-light);
+}
+
+.messageBubbleLeft #date {
+  text-align: right;
+}
+
+
+.messageBubbleRight {
+  padding: 3%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: var(--ed-background);
+  border-radius: 4px;
+  position: relative;
+}
+
+.messageBubbleRight::after {
+  content: "";
+  position: absolute;
+  bottom: 0px;
+  right: -10px;
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 0px solid transparent;
+  border-left: 10px solid var(--ed-background);
+}
+
+#user {
+  font-weight: 600;
+}
+
+#date {
+  color: var(--ed-gray-dark);
+  font-size: 12px;
+  margin-bottom: 0px;
+}
+
+.messageBubbleLeft .message-content,
+.messageBubbleRight .message-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#btn {
+  margin: 0px 0px 0px 10px;
+}
+
+#btnSend {
+  margin: 0px;
+}
+
+#userCol {
+  padding: 0px;
+}
+
+.chat-input-container {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #fff;
+}
+
+.attachment-icon {
+  margin-right: 10px;
+  font-size: 24px;
+  color: var(--ed-blue-light);
+  cursor: pointer;
+}
+
+.chat-input-container app-rich-text-editor {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.message-input {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.message-input textarea {
+  padding: 10px;
+  box-sizing: border-box;
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.send-button {
+  background-color: #002D72;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
+
+}
+
+.send-button mat-icon {
+  font-size: 16px;
+}
+
+:host ::ng-deep .custom-padding .mat-list-item-content {
+  padding: 0px !important;
+  margin-right: 15px !important;
+  font-family: 'Cabin', sans-serif;
+}
+
+.mat-line {
+  cursor: pointer;
+  color: var(--ed-blue-dark);
+  text-decoration: underline;
+}
+
+.mat-line :hover {
+  color: var(--ed-yellow) !important;
+}
+
+.attachments-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+}
+
+.attachment {
+  margin-right: 10px;
+}
+
+
+.attachment-item mat-icon {
+  color: var(--ed-blue-dark);
+
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+}
+
+.message-attachment {
+  margin-right: 8px;
+  cursor: pointer;
+  color: var(--ed-blue-dark);
+  text-decoration: underline;
+}
+
+.message-content a {
+  text-decoration: underline;
+  color: var(--ed-blue-dark);
+}
+
+.message-content a:hover {
+  color: var(--ed-yellow);
+}
+
+
+@media screen and (max-width: 767px) {
+
+  .chat-input-container {
+    flex-direction: row; /* Cambia la direzione del flex container a row */
+    align-items: center; /* Allinea gli elementi al centro */
+  }
+
+  .message-input {
+    flex: 1; /* Permette all'input di messaggio di occupare tutto lo spazio disponibile */
+    margin-right: 10px; /* Spazio tra l'input e il bottone di invio */
+  }
+
+
+  .send-button {
+    margin: 10px 0;
+  }
+
+ 
+  #btn {
+    width: 100%;
+    margin: 0px 0px 15px 0px;
+  }
+
+  .ed-block-standard {
+    margin-bottom: 15px;
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+}
+
+.related-ticket-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #0056b3;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.related-ticket-link:hover {
+    text-decoration: underline;
+}
+
+.status-dot {
+    height: 10px;
+    width: 10px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.status-resolved {
+    background-color: #28a745;
+}
+
+.status-in-progress {
+    background-color: #ffc107;
+}
+
+.ed-block-standard h4 {
+  margin-bottom: .25rem;
+}
+.ed-block-standard hr {
+  margin: .25rem 0 1rem;
+  opacity: .25;        /* sottile e discreto */
+}

@@ -6,13 +6,15 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_BASE="${ROOT_DIR}/docker-compose.yml"
 COMPOSE_PROD="${ROOT_DIR}/docker-compose.prod.yml"
 ENV_FILE="${ROOT_DIR}/.env"
+PROFILE="${DEPLOY_PROFILE:-backend}"
+NGINX_SERVICE="nginx"
 
 log() { echo -e "✅ $*"; }
 warn(){ echo -e "⚠️  $*" >&2; }
 err() { echo -e "❌ $*" >&2; }
 
 compose() {
-  docker compose -f "$COMPOSE_BASE" -f "$COMPOSE_PROD" "$@"
+  docker compose -f "$COMPOSE_BASE" -f "$COMPOSE_PROD" --profile "$PROFILE" "$@"
 }
 
 require_file() {
@@ -40,6 +42,10 @@ load_env
 : "${SERVER_NAME:?SERVER_NAME missing in .env}"
 : "${CERTBOT_EMAIL:?CERTBOT_EMAIL missing in .env}"
 
+if [[ "$PROFILE" == "frontend" ]]; then
+  NGINX_SERVICE="nginx_frontend"
+fi
+
 log "Setting executable permissions..."
 chmod +x \
   "$ROOT_DIR/nginx/init.sh" \
@@ -52,7 +58,7 @@ mkdir -p "$ROOT_DIR/letsencrypt_data" "$ROOT_DIR/certbot-www"
 CERT_PATH_HOST="$ROOT_DIR/letsencrypt_data/live/${SERVER_NAME}/fullchain.pem"
 RENEW_CONF_HOST="$ROOT_DIR/letsencrypt_data/renewal/${SERVER_NAME}.conf"
 
-log "Building and starting stack (PROD)..."
+log "Building and starting stack (PROD, profile: ${PROFILE})..."
 compose up -d --build
 
 log "Waiting for Nginx on port 80 (best-effort)..."
@@ -88,8 +94,8 @@ compose run --rm --entrypoint certbot certbot \
 touch "$ROOT_DIR/certbot-www/.nginx-reload" || true
 
 log "Reloading Nginx (safe)..."
-compose exec -T nginx nginx -t
-compose exec -T nginx nginx -s reload || true
+compose exec -T "$NGINX_SERVICE" nginx -t
+compose exec -T "$NGINX_SERVICE" nginx -s reload || true
 
 log "Starting certbot service (renew loop)..."
 compose up -d certbot

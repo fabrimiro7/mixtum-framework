@@ -1,0 +1,122 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Tutorial</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button *ngIf="userType !== 'Utente'" id="btn" mat-raised-button class="primary-button-light"
+        (click)="redirectTo('academy')">
+        <mat-icon fontIcon="arrow_backward"></mat-icon>
+        <span>TORNA AI TUTORIALS</span>
+      </button>
+      <button *ngIf="userType == 'Utente'" id="btn" mat-raised-button class="primary-button"
+        (click)="redirectTo('academy')">
+        <mat-icon fontIcon="arrow_backward"></mat-icon>
+        <span>TORNA AI TUTORIALS</span>
+      </button>
+      <button *ngIf="userType !== 'Utente'" id="btn" mat-raised-button class="primary-button"
+        (click)="redirectTo('academy/tutorial/edit/' + idTutorial + '/')">
+        <span>Modifica</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!--Colonna sinistra-->
+<div class="container-fluid" >
+  <div class="details">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="iframe-container" *ngIf="urlTutorial">
+      <iframe [src]="urlTutorial" title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+      </div>
+    </div>
+    <!--Colonna destra-->
+    <div class="col-md-4">
+      <div class="start">
+        <!--Chips-->
+        <mat-chip-list>
+          <mat-chip *ngFor="let element of tutorialDetails.category">
+            {{element.title}}
+          </mat-chip>
+        </mat-chip-list>
+        
+        <h4>{{tutorialDetails.title}}</h4>
+        <p class="product" *ngIf="userType == 'Utente'">
+          Prodotto: 
+          <span *ngFor="let project of projectDetails; let i = index;">
+            {{project.title}}{{i < projectDetails.length - 1 ? ', ' : ''}}
+          </span>
+        </p>
+        <div class="tutorial-description" [innerHTML]="getSafeHtml(tutorialDetails?.description)"></div>
+      </div>
+      
+      <div class="middle">
+        <div class="iconList">
+          <div class="icon-text">
+            <mat-icon fontIcon="schedule"></mat-icon>
+            <span>
+              <b>Durata:</b><span> {{tutorialDetails.duration}} min</span>
+            </span>
+          </div>
+          <div class="icon-text">
+            <mat-icon fontIcon="school"></mat-icon>
+            <b>Difficoltà:&nbsp;</b>
+            <span>
+               {{
+                tutorialDetails.level == 'low' ? 'Bassa' :
+                tutorialDetails.level == 'medium' ? 'Media' :
+                tutorialDetails.level == 'high' ? 'Alta' : ''
+              }}
+            </span>
+          </div>
+          <div class="icon-text">
+            <mat-icon *ngIf="!tutorialDetails.author?.avatar" fontIcon="account_circle">
+            </mat-icon>
+            <img *ngIf="tutorialDetails.author?.avatar" src="{{tutorialDetails.author.avatar}}" width="30px">
+            <span>
+              <b> Autore:</b> {{tutorialDetails.author?.first_name}} {{tutorialDetails.author?.last_name}}
+            </span>
+          </div>
+          <div *ngIf="userType !== 'Utente'" class="icon-text">
+            <mat-icon fontIcon="event_note"></mat-icon>
+            <span>
+              <b>Data:</b><span> {{dataParser.ISOToNormalDate(tutorialDetails.insert_date)}}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="tw-field" style="width: 100%;">
+        <label class="tw-label">Note aggiuntive</label>
+        <textarea
+          class="tw-textarea"
+          cdkTextareaAutosize
+          cdkAutosizeMinRows="1"
+          cdkAutosizeMaxRows="10"
+          placeholder="Puoi utilizzare questo spazio per prendere appunti"
+          [(ngModel)]="notaText"
+          (ngModelChange)="onNoteChange()"
+        ></textarea>
+      </div>
+      <button style="margin:0%" *ngIf="isModified" mat-raised-button class="primary-button" (click)="saveNote()">Salva nota</button>
+    </div>
+    <div class="col-md-4">
+      <div class="end">
+        <p>Non riesci a completare il tutorial? Ti aiutiamo noi</p>
+
+        <button id="btnFull" mat-raised-button class="primary-button-light" (click)="redirectTo('ticket/add')">
+          <span>RICHIEDI ASSISTENZA</span>
+          <mat-icon fontIcon="arrow_forward"></mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

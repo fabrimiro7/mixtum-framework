@@ -1,0 +1,8 @@
+.ed-breadcrumb {
+    cursor: pointer;
+    color: #9ca0aa !important;
+}
+
+.ed-breadcrumb-left {
+    margin-left: 13px;
+}

@@ -11,6 +11,10 @@ CORS_ALLOWED_ORIGINS = [
     o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
 ]
 CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "1").lower() in ("1", "true", "yes")
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-workspace-id",
+]
 REMOTE_API = os.environ.get("REMOTE_API", "1").lower() in ("1", "true", "yes")
 
 LANGUAGE_CODE = "it-it"
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
     "base_modules.user_manager",
     "base_modules.mailer",
     "base_modules.key_manager",
+    "base_modules.branding",
     "base_modules.workspace",
     "base_modules.attachment",
     "base_modules.the_watcher",
@@ -64,8 +69,8 @@ INSTALLED_APPS = [
     "plugins.documents",
 
     # Integrations
-    "integrations.slack",
-    "integrations.n8n",
+    "base_modules.integrations.slack",
+    "base_modules.integrations.n8n",
 ]
 SITE_ID = int(os.getenv("SITE_ID", "1"))
 

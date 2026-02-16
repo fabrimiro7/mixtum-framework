@@ -1,0 +1,231 @@
+<div class="container-fluid">
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+      <div class="col">
+        <h1 *ngIf="entityType === 'account'">
+          {{ isEditMode ? 'Modifica Conto' : 'Nuovo Conto' }}
+        </h1>
+        <h1 *ngIf="entityType === 'bank'">
+          {{ isEditMode ? 'Modifica Banca' : 'Nuova Banca' }}
+        </h1>
+      </div>
+      <div class="col-md-auto">
+        <button mat-raised-button class="primary-button-light me-2" (click)="cancel()">
+          <span>ANNULLA</span>
+        </button>
+        <button mat-raised-button class="primary-button" (click)="onSubmit()" [disabled]="saving">
+          <span>SALVA</span>
+          <mat-icon fontIcon="check"></mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Type Selector (only for new entities) -->
+    <div class="ed-block-standard mb-4" *ngIf="!isEditMode">
+      <div class="type-selector">
+        <button mat-button [class.active]="entityType === 'account'" (click)="setEntityType('account')">
+          <mat-icon>account_balance_wallet</mat-icon>
+          Conto
+        </button>
+        <button mat-button [class.active]="entityType === 'bank'" (click)="setEntityType('bank')">
+          <mat-icon>account_balance</mat-icon>
+          Banca
+        </button>
+      </div>
+    </div>
+
+    <!-- Account Form -->
+    <div class="ed-block-standard" *ngIf="entityType === 'account'">
+      <form [formGroup]="accountForm" class="tw-form-grid">
+        <!-- Name -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Nome Conto</label>
+          <input
+            class="tw-input"
+            formControlName="name"
+            placeholder="Es: Conto Principale"
+          >
+          <p class="tw-error" *ngIf="accountForm.get('name')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <div class="row">
+          <!-- Bank -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Banca</label>
+            <app-tw-select
+              formControlName="bank_id"
+              [items]="bankOptions"
+              bindValue="id"
+              bindLabel="name"
+            ></app-tw-select>
+          </div>
+
+          <!-- Account Type -->
+          <div class="col-md-6 tw-field">
+            <label class="tw-label">Tipo Conto</label>
+            <app-tw-select
+              formControlName="account_type"
+              [items]="accountTypeOptions"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+        </div>
+
+        <!-- IBAN -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">IBAN</label>
+          <input
+            class="tw-input"
+            formControlName="iban"
+            placeholder="IT60X0542811101000000123456"
+          >
+          <p class="tw-help">Opzionale</p>
+        </div>
+
+        <div class="row">
+          <!-- Initial Balance -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Saldo Iniziale</label>
+            <input
+              class="tw-input"
+              type="number"
+              formControlName="initial_balance"
+              step="0.01"
+            >
+            <p class="tw-error" *ngIf="accountForm.get('initial_balance')?.hasError('required')">
+              Campo obbligatorio
+            </p>
+          </div>
+
+          <!-- Currency -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Valuta</label>
+            <app-tw-select
+              formControlName="currency"
+              [items]="currencyOptions"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <!-- Color -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Colore</label>
+            <input
+              class="tw-input h-10"
+              type="color"
+              formControlName="color"
+            >
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Descrizione</label>
+          <textarea
+            class="tw-textarea"
+            formControlName="description"
+            rows="2"
+          ></textarea>
+        </div>
+
+        <!-- Options -->
+        <div class="options-section">
+          <mat-slide-toggle formControlName="is_active">
+            Conto Attivo
+          </mat-slide-toggle>
+          <mat-slide-toggle formControlName="include_in_totals">
+            Includi nei Totali
+          </mat-slide-toggle>
+        </div>
+      </form>
+    </div>
+
+    <!-- Bank Form -->
+    <div class="ed-block-standard" *ngIf="entityType === 'bank'">
+      <form [formGroup]="bankForm" class="tw-form-grid">
+        <!-- Name -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Nome Banca</label>
+          <input
+            class="tw-input"
+            formControlName="name"
+            placeholder="Es: Intesa Sanpaolo"
+          >
+          <p class="tw-error" *ngIf="bankForm.get('name')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <div class="row">
+          <!-- ABI Code -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Codice ABI</label>
+            <input
+              class="tw-input"
+              formControlName="abi_code"
+              placeholder="03069"
+            >
+          </div>
+
+          <!-- SWIFT Code -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Codice SWIFT/BIC</label>
+            <input
+              class="tw-input"
+              formControlName="swift_code"
+              placeholder="BCITITMM"
+            >
+          </div>
+
+          <!-- Country -->
+          <div class="col-md-4 tw-field">
+            <label class="tw-label">Paese</label>
+            <input
+              class="tw-input"
+              formControlName="country"
+              placeholder="IT"
+              maxlength="2"
+            >
+          </div>
+        </div>
+
+        <!-- Website -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Sito Web</label>
+          <input
+            class="tw-input"
+            formControlName="website"
+            placeholder="https://www.banca.it"
+          >
+        </div>
+
+        <!-- Notes -->
+        <div class="w-100 tw-field">
+          <label class="tw-label">Note</label>
+          <textarea
+            class="tw-textarea"
+            formControlName="notes"
+            rows="2"
+          ></textarea>
+        </div>
+
+        <!-- Options -->
+        <div class="options-section">
+          <mat-slide-toggle formControlName="is_active">
+            Banca Attiva
+          </mat-slide-toggle>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

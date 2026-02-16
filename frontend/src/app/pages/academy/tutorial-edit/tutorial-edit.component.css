@@ -1,0 +1,41 @@
+#btn{
+    margin: 0px 0px 0px 10px;
+    
+  }
+
+  .rich-description-field {
+    margin-bottom: 20px;
+  }
+
+  .rich-description-field .field-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  
+  @media screen and (max-width: 767px) {
+    #btn { 
+      width: 100%;
+      margin: 0px 0px 15px 0px;
+    }
+  }
+
+  .ed-block-standard {
+    margin: 0%;
+  }
+
+  .form {
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem;   
+  }
+
+  @media screen and (max-width: 767px) {
+    .ed-block-standard { 
+      margin-top: 10px;
+    }
+
+    .form{ 
+      gap: 0rem;
+    }
+  }

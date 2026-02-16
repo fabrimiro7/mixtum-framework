@@ -1,0 +1,740 @@
+<!-- HEADER -->
+<div class="container-fluid project-header">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1 class="project-title">
+        {{ project?.title }}
+      </h1>
+      <p class="project-subtitle" *ngIf="project?.description">
+        {{ project?.description }}
+      </p>
+    </div>
+
+    <div class="col-md-auto text-md-right header-actions">
+      <button mat-raised-button class="primary-button-light" (click)="redirectTo('projects')">
+        <mat-icon fontIcon="arrow_backward"></mat-icon>
+        Torna ai progetti
+      </button>
+
+      <button mat-raised-button class="primary-button"
+              (click)="redirectTo('projects/edit/' + projectID + '/')">
+        Modifica
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<div class="container-fluid project-tabs-container">
+    <mat-tab-group class="project-tabs" [selectedIndex]="activeTabIndex" (selectedIndexChange)="onTabChange($event)">
+    <mat-tab label="Dettagli">
+      <div class="tab-pane" *ngIf="tabsLoaded.details">
+        <div class="container-fluid project-body">
+          <div class="row equal-cols">
+
+            <!-- LEFT -->
+            <div class="col-sm-8">
+              <div class="project-info-card ed-block-standard">
+                <h4>Dettagli progetto</h4>
+
+                <div class="info-line">
+                  <mat-icon class="info-icon" fontIcon="event"></mat-icon>
+                  <span>Creato il <b>{{ project?.insert_date }}</b></span>
+                </div>
+
+                <div class="info-line" *ngIf="project?.contributors?.length">
+                  <mat-icon class="info-icon" fontIcon="groups"></mat-icon>
+                  <span>Contributors:</span>
+                </div>
+
+                <div class="tag-list" *ngIf="project?.contributors?.length">
+                  <span *ngFor="let user of project?.contributors" class="tag">
+                    {{ user.first_name }} {{ user.last_name }}
+                  </span>
+                </div>
+
+              </div>
+
+              <div class="project-links-card ed-block-standard mt-3">
+                <div class="links-header">
+                  <h4>Link</h4>
+                  <button *ngIf="canManageLinkActions" mat-raised-button class="primary-button" type="button" (click)="startAddLink()" [disabled]="contentTypeLoading">
+                    <mat-icon fontIcon="add"></mat-icon>
+                    <span>Nuovo link</span>
+                  </button>
+                </div>
+
+                <div *ngIf="contentTypeLoading" class="links-loading">
+                  Recupero informazioni per i link...
+                </div>
+
+                <div *ngIf="linksLoading" class="links-loading">
+                  Caricamento link...
+                </div>
+
+                <div *ngIf="!linksLoading && !projectLinks.length" class="links-empty">
+                  Nessun link associato al progetto.
+                </div>
+
+                <div class="link-table" *ngIf="!linksLoading && projectLinks.length">
+                <div class="link-table-header">
+                  <span>Etichetta</span>
+                  <span>Nome</span>
+                  <span>URL</span>
+                  <span *ngIf="canManageLinkActions" class="actions">Azioni</span>
+                </div>
+
+                  <div class="link-table-row" *ngFor="let link of projectLinks; trackBy: trackByLink">
+                    <div class="cell cell-label">
+                      <span class="link-label">{{ link.label_display || link.label }}</span>
+                    </div>
+                    <div class="cell cell-title">
+                      <a class="link-title" [href]="link.url" target="_blank" rel="noopener noreferrer">
+                        {{ link.title }}
+                      </a>
+                      <p class="link-description" *ngIf="link.description">
+                        {{ link.description }}
+                      </p>
+                    </div>
+                    <div class="cell cell-url">
+                      <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
+                    </div>
+                    <div class="cell cell-actions" *ngIf="canManageLinkActions">
+                      <button mat-icon-button type="button" aria-label="Modifica link" (click)="startEditLink(link)">
+                        <mat-icon fontIcon="edit"></mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" color="warn" aria-label="Elimina link" (click)="deleteLink(link)">
+                        <mat-icon fontIcon="delete"></mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <form *ngIf="linkFormVisible && canManageLinkActions" [formGroup]="linkForm" (ngSubmit)="saveLink()" class="link-form tw-form-grid">
+                  <div class="form-row">
+                    <div class="tw-field">
+                      <label class="tw-label">Titolo</label>
+                      <input
+                        class="tw-input"
+                        formControlName="title"
+                        maxlength="255"
+                      >
+                      <p class="tw-error" *ngIf="linkForm.get('title')?.hasError('required')">Campo obbligatorio</p>
+                      <p class="tw-error" *ngIf="linkForm.get('title')?.hasError('maxlength')">Massimo 255 caratteri.</p>
+                      <p class="tw-error" *ngIf="linkFieldErrors['title']">{{ linkFieldErrors['title'][0] }}</p>
+                    </div>
+
+                    <div class="tw-field">
+                      <label class="tw-label">URL</label>
+                      <input
+                        class="tw-input"
+                        formControlName="url"
+                        maxlength="1000"
+                      >
+                      <p class="tw-error" *ngIf="linkForm.get('url')?.hasError('required')">Campo obbligatorio</p>
+                      <p class="tw-error" *ngIf="linkForm.get('url')?.hasError('pattern')">Inserisci un URL valido (es. https://...)</p>
+                      <p class="tw-error" *ngIf="linkFieldErrors['url']">{{ linkFieldErrors['url'][0] }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="tw-field">
+                      <label class="tw-label">Etichetta</label>
+                      <app-tw-select
+                        formControlName="label"
+                        [items]="linkLabels"
+                        bindValue="value"
+                        bindLabel="label"
+                        placeholder="Seleziona un'etichetta"
+                      ></app-tw-select>
+                      <p class="tw-error" *ngIf="linkFieldErrors['label']">{{ linkFieldErrors['label'][0] }}</p>
+                    </div>
+                  </div>
+
+                  <div class="tw-field">
+                    <label class="tw-label">Descrizione</label>
+                    <textarea
+                      class="tw-textarea"
+                      rows="3"
+                      formControlName="description"
+                    ></textarea>
+                    <p class="tw-error" *ngIf="linkFieldErrors['description']">{{ linkFieldErrors['description'][0] }}</p>
+                  </div>
+
+                  <div class="form-general-error" *ngIf="linkGeneralError">
+                    {{ linkGeneralError }}
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-raised-button type="button" class="primary-button-light" (click)="cancelLinkForm()">Annulla</button>
+                    <button mat-raised-button class="primary-button" type="submit" [disabled]="linkSubmitting">
+                      {{ editingLink ? 'Salva modifiche' : 'Aggiungi link' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-sm-4">
+              <div class="client-card ed-block-standard">
+                <h4>Dettagli cliente</h4>
+
+                <div class="info-line">
+                  <mat-icon class="info-icon" fontIcon="person"></mat-icon>
+                  <span><b>{{ project?.client?.first_name }} {{ project?.client?.last_name }}</b></span>
+                </div>
+
+                <div class="info-line">
+                  <mat-icon class="info-icon" fontIcon="mail"></mat-icon>
+                  <span>{{ project?.client?.email }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Elenco Ticket">
+      <div class="tab-pane" *ngIf="tabsLoaded.tickets">
+        <div class="tasks-header">
+          <h4>Elenco Ticket</h4>
+          <button *ngIf="canManageLinkActions" mat-raised-button class="primary-button" type="button" (click)="openNewTicket()">
+            <mat-icon fontIcon="add"></mat-icon>
+            <span>Apri un ticket</span>
+          </button>
+        </div>
+        <app-tickets-by-period
+          [externalID]="projectID"
+          [minimal]="true">
+        </app-tickets-by-period>
+      </div>
+    </mat-tab>
+
+    <mat-tab *ngIf="showTaskTab" label="Task">
+      <div class="tab-pane" *ngIf="tabsLoaded.tasks">
+        <div class="tasks-header">
+          <h4>Task</h4>
+          <div class="task-view-toggle">
+            <button mat-icon-button type="button" aria-label="Visualizzazione lista"
+              [class.active]="tasksViewMode === 'list'"
+              (click)="changeTaskView('list')">
+              <mat-icon fontIcon="view_list"></mat-icon>
+            </button>
+            <button mat-icon-button type="button" aria-label="Visualizzazione kanban"
+              [class.active]="tasksViewMode === 'board'"
+              (click)="changeTaskView('board')">
+              <mat-icon fontIcon="view_kanban"></mat-icon>
+            </button>
+            <button mat-icon-button type="button" aria-label="Visualizzazione timeline"
+              [class.active]="tasksViewMode === 'timeline'"
+              (click)="changeTaskView('timeline')">
+              <mat-icon fontIcon="timeline"></mat-icon>
+            </button>
+          </div>
+          <button *ngIf="canManageLinkActions" mat-raised-button class="primary-button" type="button" (click)="startAddTask()">
+            <mat-icon fontIcon="add"></mat-icon>
+            <span>Nuovo task</span>
+          </button>
+        </div>
+
+        <form *ngIf="taskFormVisible && canManageLinkActions" [formGroup]="taskForm" (ngSubmit)="saveTask()" class="link-form tw-form-grid">
+          <div class="form-row">
+            <div class="tw-field">
+              <label class="tw-label">Titolo</label>
+              <input
+                class="tw-input"
+                formControlName="title"
+                maxlength="200"
+              >
+              <p class="tw-error" *ngIf="taskForm.get('title')?.hasError('required')">Campo obbligatorio</p>
+              <p class="tw-error" *ngIf="taskForm.get('title')?.hasError('maxlength')">Massimo 200 caratteri.</p>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Assegnato a</label>
+              <app-tw-select
+                formControlName="assignee"
+                [items]="userListWithNone"
+                bindValue="id"
+                [labelKeys]="['first_name', 'last_name']"
+                placeholder="— Nessuno —"
+              ></app-tw-select>
+            </div>
+          </div>
+          <div class="tw-field">
+            <label class="tw-label">Descrizione</label>
+            <textarea
+              class="tw-textarea"
+              rows="3"
+              formControlName="description"
+            ></textarea>
+          </div>
+          <div class="form-row">
+            <div class="tw-field">
+              <label class="tw-label">Priorità</label>
+              <app-tw-select
+                formControlName="priority"
+                [items]="taskPriorities"
+                bindValue="value"
+                bindLabel="label"
+                placeholder="Seleziona priorità"
+              ></app-tw-select>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Stato</label>
+              <app-tw-select
+                formControlName="status"
+                [items]="taskStatuses"
+                bindValue="value"
+                bindLabel="label"
+                placeholder="Seleziona stato"
+              ></app-tw-select>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Ore stimate</label>
+              <input
+                class="tw-input"
+                type="number"
+                formControlName="estimate_hours"
+                min="0"
+                step="0.5"
+                placeholder="—"
+              >
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="tw-field">
+              <label class="tw-label">Data inizio</label>
+              <input
+                class="tw-input"
+                type="date"
+                formControlName="start_date"
+              >
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Data scadenza</label>
+              <input
+                class="tw-input"
+                type="date"
+                formControlName="due_date"
+              >
+            </div>
+          </div>
+          <div class="form-actions">
+            <button mat-raised-button type="button" class="primary-button-light" (click)="cancelTaskForm()">Annulla</button>
+            <button mat-raised-button class="primary-button" type="submit" [disabled]="taskSubmitting">Salva</button>
+          </div>
+        </form>
+
+        <div *ngIf="tasksLoading" class="links-loading">Caricamento task...</div>
+
+        <ng-container *ngIf="!tasksLoading">
+          <div class="links-empty" *ngIf="!tasks.length">
+            Nessun task presente per questo progetto.
+          </div>
+
+          <div *ngIf="tasks.length">
+            <div *ngIf="tasksViewMode === 'list'" class="task-list">
+              <div class="task-list-header">
+                <span>Titolo</span>
+                <span>Assegnato a</span>
+                <span>Priorità</span>
+                <span>Stato</span>
+                <span>Scadenza</span>
+              </div>
+              <div class="task-list-row" *ngFor="let task of tasks">
+                <div class="cell">
+                  <div class="task-title">{{ task.title }}</div>
+                  <p class="task-desc" *ngIf="task.description">{{ task.description }}</p>
+                </div>
+                <div class="cell">
+                  {{ task.assignee ? (task.assignee.first_name + ' ' + task.assignee.last_name) : '-' }}
+                </div>
+                <div class="cell">
+                  <span class="priority-chip" [ngClass]="'priority-' + task.priority">
+                    {{ task.priority_display || task.priority }}
+                  </span>
+                </div>
+                <div class="cell">{{ task.status_display || task.status }}</div>
+                <div class="cell">{{ task.due_date || '-' }}</div>
+              </div>
+            </div>
+
+            <div *ngIf="tasksViewMode === 'board'" class="task-kanban">
+              <div class="kanban-column" *ngFor="let column of taskStatuses">
+                <div class="kanban-column-header">{{ column.label }}</div>
+                <div class="kanban-column-body"
+                     cdkDropList
+                     [id]="'kanban-' + column.value"
+                     [cdkDropListData]="tasksByStatusMap[column.value]"
+                     [cdkDropListConnectedTo]="kanbanListIds"
+                     (cdkDropListDropped)="onTaskDrop($event, column.value)">
+                  <div class="task-card" *ngFor="let task of tasksByStatusMap[column.value]" cdkDrag>
+                    <div class="task-card-title">{{ task.title }}</div>
+                    <p class="task-card-desc" *ngIf="task.description">{{ task.description }}</p>
+                    <div class="task-card-meta">
+                      <span class="priority-chip" [ngClass]="'priority-' + task.priority">
+                        {{ task.priority_display || task.priority }}
+                      </span>
+                      <span class="task-assignee" *ngIf="task.assignee">
+                        {{ task.assignee.first_name }} {{ task.assignee.last_name }}
+                      </span>
+                    </div>
+                    <div class="task-card-due" *ngIf="task.due_date">
+                      <mat-icon fontIcon="event"></mat-icon>
+                      <span>{{ task.due_date }}</span>
+                    </div>
+                  </div>
+                  <div class="kanban-empty" *ngIf="!(tasksByStatusMap[column.value]?.length)">
+                    Nessun task
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="tasksViewMode === 'timeline' && timelineDays.length" class="task-timeline">
+              <div class="timeline-scroll">
+                <div class="timeline-header">
+                  <div class="timeline-label-space sticky-label">Task</div>
+                  <div class="timeline-days"
+                       [style.width.px]="timelineWidth"
+                       [style.gridTemplateColumns]="'repeat(' + timelineDays.length + ', ' + timelineDayWidth + 'px)'">
+                    <div class="timeline-day-cell" *ngFor="let day of timelineDays">
+                      {{ day | date:'dd MMM' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-row" *ngFor="let task of tasks">
+                  <div class="timeline-label sticky-label">{{ task.title }}</div>
+                  <div class="timeline-track" [style.width.px]="timelineWidth" [style.minWidth.px]="timelineWidth">
+                    <div class="timeline-bar"
+                         cdkDrag
+                         cdkDragLockAxis="x"
+                         (cdkDragEnded)="onTimelineDragEnded($event, task)"
+                         [style.left.px]="taskOffsetDays(task) * timelineDayWidth"
+                         [style.width.px]="taskDurationDays(task) * timelineDayWidth">
+                         <span>{{ task.assignee ? (task.assignee.first_name + ' ' + task.assignee.last_name) : 'Non assegnato' }}</span>
+                         <small *ngIf="task.start_date && task.due_date">{{ task.start_date }} → {{ task.due_date }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="tasksViewMode === 'timeline' && !timelineDays.length" class="links-empty">
+              Nessuna informazione sulla timeline disponibile.
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <mat-tab *ngIf="showPhaseTab" label="Fasi di progetto">
+      <div class="tab-pane" *ngIf="tabsLoaded.phases">
+        <div class="tasks-header">
+          <h4>Fasi di progetto</h4>
+          <div class="task-view-toggle">
+            <button mat-icon-button type="button" aria-label="Visualizzazione lista"
+              [class.active]="phasesViewMode === 'list'"
+              (click)="changePhaseView('list')">
+              <mat-icon fontIcon="view_list"></mat-icon>
+            </button>
+            <button mat-icon-button type="button" aria-label="Visualizzazione kanban"
+              [class.active]="phasesViewMode === 'board'"
+              (click)="changePhaseView('board')">
+              <mat-icon fontIcon="view_kanban"></mat-icon>
+            </button>
+            <button mat-icon-button type="button" aria-label="Visualizzazione timeline"
+              [class.active]="phasesViewMode === 'timeline'"
+              (click)="changePhaseView('timeline')">
+              <mat-icon fontIcon="timeline"></mat-icon>
+            </button>
+          </div>
+          <button *ngIf="canManageLinkActions" mat-raised-button class="primary-button" type="button" (click)="startAddPhase()">
+            <mat-icon fontIcon="add"></mat-icon>
+            <span>Nuova fase</span>
+          </button>
+        </div>
+
+        <form *ngIf="phaseFormVisible && canManageLinkActions" [formGroup]="phaseForm" (ngSubmit)="savePhase()" class="link-form tw-form-grid">
+          <div class="form-row">
+            <div class="tw-field">
+              <label class="tw-label">Titolo</label>
+              <input
+                class="tw-input"
+                formControlName="title"
+                maxlength="200"
+              >
+              <p class="tw-error" *ngIf="phaseForm.get('title')?.hasError('required')">Campo obbligatorio</p>
+              <p class="tw-error" *ngIf="phaseForm.get('title')?.hasError('maxlength')">Massimo 200 caratteri.</p>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Proprietario</label>
+              <app-tw-select
+                formControlName="owner"
+                [items]="userListWithNone"
+                bindValue="id"
+                [labelKeys]="['first_name', 'last_name']"
+                placeholder="— Nessuno —"
+              ></app-tw-select>
+            </div>
+          </div>
+          <div class="tw-field">
+            <label class="tw-label">Descrizione</label>
+            <textarea
+              class="tw-textarea"
+              rows="3"
+              formControlName="description"
+            ></textarea>
+          </div>
+          <div class="form-row">
+            <div class="tw-field">
+              <label class="tw-label">Priorità</label>
+              <app-tw-select
+                formControlName="priority"
+                [items]="taskPriorities"
+                bindValue="value"
+                bindLabel="label"
+                placeholder="Seleziona priorità"
+              ></app-tw-select>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Stato</label>
+              <app-tw-select
+                formControlName="status"
+                [items]="taskStatuses"
+                bindValue="value"
+                bindLabel="label"
+                placeholder="Seleziona stato"
+              ></app-tw-select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="tw-field">
+              <label class="tw-label">Data inizio</label>
+              <input
+                class="tw-input"
+                type="date"
+                formControlName="start_date"
+              >
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Data scadenza</label>
+              <input
+                class="tw-input"
+                type="date"
+                formControlName="due_date"
+              >
+            </div>
+          </div>
+          <div class="form-actions">
+            <button mat-raised-button type="button" class="primary-button-light" (click)="cancelPhaseForm()">Annulla</button>
+            <button mat-raised-button class="primary-button" type="submit" [disabled]="phaseSubmitting">Salva</button>
+          </div>
+        </form>
+
+        <div *ngIf="phasesLoading" class="links-loading">Caricamento fasi...</div>
+
+        <ng-container *ngIf="!phasesLoading">
+          <div class="links-empty" *ngIf="!phases.length">
+            Nessuna fase di progetto presente.
+          </div>
+
+          <div *ngIf="phases.length">
+            <div *ngIf="phasesViewMode === 'list'" class="task-list">
+              <div class="task-list-header">
+                <span>Titolo</span>
+                <span>Assegnato a</span>
+                <span>Priorità</span>
+                <span>Stato</span>
+                <span>Scadenza</span>
+              </div>
+              <div class="task-list-row" *ngFor="let phase of phases">
+                <div class="cell">
+                  <div class="task-title">{{ phase.title }}</div>
+                  <p class="task-desc" *ngIf="phase.description">{{ phase.description }}</p>
+                </div>
+                <div class="cell">
+                  {{ phase.owner ? (phase.owner.first_name + ' ' + phase.owner.last_name) : '-' }}
+                </div>
+                <div class="cell">
+                  <span class="priority-chip" [ngClass]="'priority-' + phase.priority">
+                    {{ phase.priority_display || phase.priority }}
+                  </span>
+                </div>
+                <div class="cell">{{ phase.status_display || phase.status }}</div>
+                <div class="cell">{{ phase.due_date || '-' }}</div>
+              </div>
+            </div>
+
+            <div *ngIf="phasesViewMode === 'board'" class="task-kanban">
+              <div class="kanban-column" *ngFor="let column of taskStatuses">
+                <div class="kanban-column-header">{{ column.label }}</div>
+                <div class="kanban-column-body"
+                     cdkDropList
+                     [id]="'phase-kanban-' + column.value"
+                     [cdkDropListData]="phasesByStatusMap[column.value]"
+                     [cdkDropListConnectedTo]="phaseKanbanListIds"
+                     (cdkDropListDropped)="onPhaseDrop($event, column.value)">
+                  <div class="task-card" *ngFor="let phase of phasesByStatusMap[column.value]" cdkDrag>
+                    <div class="task-card-title">{{ phase.title }}</div>
+                    <p class="task-card-desc" *ngIf="phase.description">{{ phase.description }}</p>
+                    <div class="task-card-meta">
+                      <span class="priority-chip" [ngClass]="'priority-' + phase.priority">
+                        {{ phase.priority_display || phase.priority }}
+                      </span>
+                      <span class="task-assignee" *ngIf="phase.owner">
+                        {{ phase.owner.first_name }} {{ phase.owner.last_name }}
+                      </span>
+                    </div>
+                    <div class="task-card-due" *ngIf="phase.due_date">
+                      <mat-icon fontIcon="event"></mat-icon>
+                      <span>{{ phase.due_date }}</span>
+                    </div>
+                  </div>
+                  <div class="kanban-empty" *ngIf="!(phasesByStatusMap[column.value]?.length)">
+                    Nessuna fase
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="phasesViewMode === 'timeline' && phaseTimelineDays.length" class="task-timeline">
+              <div class="timeline-scroll">
+                <div class="timeline-header">
+                  <div class="timeline-label-space sticky-label">Fase</div>
+                  <div class="timeline-days"
+                       [style.width.px]="phaseTimelineWidth"
+                       [style.gridTemplateColumns]="'repeat(' + phaseTimelineDays.length + ', ' + timelineDayWidth + 'px)'">
+                    <div class="timeline-day-cell" *ngFor="let day of phaseTimelineDays">
+                      {{ day | date:'dd MMM' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-row" *ngFor="let phase of phases">
+                  <div class="timeline-label sticky-label">{{ phase.title }}</div>
+                  <div class="timeline-track" [style.width.px]="phaseTimelineWidth" [style.minWidth.px]="phaseTimelineWidth">
+                    <div class="timeline-bar"
+                         cdkDrag
+                         cdkDragLockAxis="x"
+                         (cdkDragEnded)="onPhaseTimelineDragEnded($event, phase)"
+                         [style.left.px]="phaseOffsetDays(phase) * timelineDayWidth"
+                         [style.width.px]="phaseDurationDays(phase) * timelineDayWidth">
+                         <span>{{ phase.owner ? (phase.owner.first_name + ' ' + phase.owner.last_name) : 'Non assegnato' }}</span>
+                         <small *ngIf="phase.start_date && phase.due_date">{{ phase.start_date }} → {{ phase.due_date }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="phasesViewMode === 'timeline' && !phaseTimelineDays.length" class="links-empty">
+              Nessuna informazione sulla timeline disponibile.
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Report">
+      <div class="tab-pane" *ngIf="tabsLoaded.reports">
+        <section class="reports-tab ed-block-standard">
+          <div class="reports-header">
+            <h4>Report</h4>
+            <div *ngIf="canManageReports()">
+              <button mat-raised-button type="button" class="primary-button" (click)="startAddReport()">
+                <mat-icon fontIcon="add"></mat-icon>
+                Nuovo report
+              </button>
+            </div>
+          </div>
+
+          <form *ngIf="reportFormVisible" [formGroup]="reportForm" (ngSubmit)="saveReport()" class="report-form tw-form-grid">
+            <div class="form-row">
+              <div class="tw-field">
+                <label class="tw-label">Titolo</label>
+                <input
+                  class="tw-input"
+                  maxlength="1000"
+                  formControlName="report_title"
+                />
+                <p class="tw-error" *ngIf="reportForm.get('report_title')?.hasError('required')">Campo obbligatorio.</p>
+                <p class="tw-error" *ngIf="reportForm.get('report_title')?.hasError('maxlength')">
+                  Massimo 1000 caratteri.
+                </p>
+              </div>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Descrizione</label>
+              <textarea
+                class="tw-textarea"
+                rows="4"
+                formControlName="report_description"
+              ></textarea>
+              <p class="tw-error" *ngIf="reportForm.get('report_description')?.hasError('required')">
+                Campo obbligatorio.
+              </p>
+              <p class="tw-error" *ngIf="reportForm.get('report_description')?.hasError('minlength')">
+                Inserisci almeno 2 caratteri.
+              </p>
+            </div>
+            <div class="tw-field">
+              <label class="tw-label">Visibile ai ruoli</label>
+              <app-tw-select
+                formControlName="visible_roles"
+                [items]="reportVisibilityOptions"
+                bindValue="value"
+                bindLabel="label"
+                [multiple]="true"
+                placeholder="Seleziona ruoli"
+              ></app-tw-select>
+              <p class="tw-error" *ngIf="reportForm.get('visible_roles')?.hasError('required')">
+                Seleziona almeno un ruolo.
+              </p>
+            </div>
+            <div class="form-general-error" *ngIf="reportFormError">{{ reportFormError }}</div>
+            <div class="form-actions">
+              <button mat-raised-button type="button" class="primary-button-light" (click)="cancelReportForm()">
+                Annulla
+              </button>
+              <button mat-raised-button type="submit" class="primary-button" [disabled]="reportSaving">
+                {{ editingReport ? 'Salva modifiche' : 'Aggiungi report' }}
+              </button>
+            </div>
+          </form>
+
+          <div *ngIf="reportsLoading" class="links-loading">
+            Caricamento dei report...
+          </div>
+
+          <div *ngIf="!reportsLoading && !reports.length" class="links-empty">
+            Nessun report associato a questo progetto.
+          </div>
+
+          <div *ngIf="!reportsLoading && reports.length" class="report-list">
+            <article class="report-card" *ngFor="let report of reports">
+              <header class="report-card-header">
+                <div>
+                  <div class="report-title">{{ report.report_title }}</div>
+                  <div class="report-roles" *ngIf="report.visible_roles?.length">
+                    <mat-chip-list>
+                      <mat-chip *ngFor="let role of report.visible_roles">{{ role }}</mat-chip>
+                    </mat-chip-list>
+                  </div>
+                </div>
+                <div class="report-card-actions" *ngIf="canManageReports()">
+                  <button mat-icon-button type="button" (click)="startEditReport(report)">
+                    <mat-icon fontIcon="edit"></mat-icon>
+                  </button>
+                </div>
+              </header>
+              <p class="report-description" [innerText]="report.report_description"></p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

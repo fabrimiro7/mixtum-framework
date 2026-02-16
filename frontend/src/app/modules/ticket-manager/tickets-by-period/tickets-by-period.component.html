@@ -1,0 +1,319 @@
+<!-- HEADER -->
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>{{ minimal ? 'Elenco ticket' : 'Tickets' }}</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button id="btn" mat-raised-button class="primary-button" (click)="redirectTo('tickets/add/')" *ngIf="!minimal">
+        <span>Apri un ticket</span>
+        <mat-icon fontIcon="add"></mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CHIPS ANNI -->
+<div class="container-fluid mt-2">
+  <mat-chip-list>
+    <mat-chip
+      *ngFor="let y of years"
+      (click)="onYearClick(y)"
+      [class.selected]="isYearActive(y)">
+      {{ y }}
+      <span class="chip-badge ml-1" *ngIf="monthsByYear[y]">
+        ({{ getYearTotal(y) }} tickets)
+      </span>
+    </mat-chip>
+  </mat-chip-list>
+</div>
+
+<!-- CHIPS MESI (visibili quando c'è un anno selezionato) -->
+<div class="container-fluid" *ngIf="selectedYear">
+  <mat-chip-list>
+    <mat-chip
+      *ngFor="let m of monthsOfSelectedYear()"
+      (click)="onMonthClick(m.idx)"
+      [class.selected]="isMonthActive(m.idx)"
+      [class.disabled]="m.count === 0"
+      [matTooltip]="m.count === 0 ? 'Nessun ticket' : (m.count + ' ticket')">
+      {{ m.label }}
+      <span class="chip-badge ml-1">({{ m.count }})</span>
+    </mat-chip>
+  </mat-chip-list>
+</div>
+
+<!-- ERROR -->
+<div class="container-fluid">
+  <div class="alert alert-danger" *ngIf="errorMsg">{{ errorMsg }}</div>
+</div>
+
+<!-- DESKTOP TABLE -->
+ <div class="container-fluid mt-3">
+  <div class="totals-card">
+    <div class="d-none d-md-block container-fluid">
+      <table
+        mat-table
+        [dataSource]="tickets"
+        matSort
+        (matSortChange)="onSortChange($event)"
+        [matSortActive]="sortActive"
+        [matSortDirection]="sortDirection"
+        class="comfortable-table"
+      >
+
+        <!-- ID -->
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="id">ID</th>
+          <td mat-cell *matCellDef="let t">#{{ t.id }}</td>
+        </ng-container>
+
+        <!-- TITOLO + PROGETTO -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Titolo</th>
+          <td mat-cell *matCellDef="let t" id="title" (click)="redirectTo('tickets/' + t.id)">
+            <div class="title-wrap">
+              <div class="title-main">{{ truncate(t.title, 60) }}</div>
+              <div class="title-sub" *ngIf="getProjectLabel(t) as proj">{{ proj }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- TICKET TYPE -->
+        <ng-container matColumnDef="ticket_type">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let t">
+            <span class="type-badge" [ngClass]="getTicketTypeClass(t.ticket_type)">
+              {{ normalizeTypeLabel(t.ticket_type) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- CLIENT -->
+        <ng-container matColumnDef="client">
+          <th mat-header-cell *matHeaderCellDef>Cliente</th>
+          <td mat-cell *matCellDef="let t">
+            {{ t.client?.first_name || t.client?.username || t.client?.email || '—' }}
+          </td>
+        </ng-container>
+
+        <!-- STATO -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Stato</th>
+          <td mat-cell *matCellDef="let t">
+            <span [ngClass]="getStatusClass(t.status)" class="status-dot"></span>
+            {{ (t.status == 'open' ? 'Aperto' : '') ||
+              (t.status == 'in_progress' ? 'Preso in carico' : '') ||
+              (t.status == 'resolved' ? 'Risolto' : '') ||
+              (t.status == 'closed' ? 'Chiuso' : '') }}
+          </td>
+        </ng-container>
+
+        <!-- PAGAMENTO -->
+        <ng-container matColumnDef="payment_status">
+          <th mat-header-cell *matHeaderCellDef>Pagamento</th>
+          <td mat-cell *matCellDef="let t">
+            <span class="type-badge payment-badge" [ngClass]="getPaymentBadgeClass(t.payments_status)">
+              {{ t.payments_status ? 'Pagato' : 'Non pagato' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- PRIORITÀ -->
+        <ng-container matColumnDef="priority">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="priority">Priorità</th>
+          <td mat-cell *matCellDef="let t">
+            <span class="priority-badge" [ngClass]="getPriorityClass(t.priority)">
+              {{ formatPriorityLabel(t.priority) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- HOURS ESTIMATION (Min) -->
+        <ng-container matColumnDef="hours_estimation">
+          <th mat-header-cell *matHeaderCellDef>Min</th>
+          <td mat-cell *matCellDef="let t">
+            <div>{{ t.hours_estimation || '-' }}</div>
+          </td>
+        </ng-container>
+
+        <!-- COST ESTIMATION (Quotazione) -->
+        <ng-container matColumnDef="cost_estimation">
+          <th mat-header-cell *matHeaderCellDef>Quotazione</th>
+          <td mat-cell *matCellDef="let t">
+            <div>
+              {{ t.cost_estimation || '-' }} €
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- ASSEGNATARIO -->
+        <ng-container matColumnDef="assignee">
+          <th mat-header-cell *matHeaderCellDef>Assegnatario</th>
+          <td mat-cell *matCellDef="let t">
+            <ng-container *ngIf="t.assignees?.length; else noAssignee">
+              <ng-container *ngIf="t.assignees[0]?.avatar && !hasAvatarError(t.assignees[0]); else initialsAvatar">
+                <img class="avatar"
+                    [src]="t.assignees[0].avatar"
+                    [alt]="getFullName(t.assignees[0])"
+                    loading="lazy"
+                    (error)="markAvatarError(t.assignees[0])"
+                    matTooltip="{{ getFullName(t.assignees[0]) }}" />
+              </ng-container>
+              <ng-template #initialsAvatar>
+                <div class="avatar initials" matTooltip="{{ getFullName(t.assignees[0]) }}">
+                  {{ getInitials(t.assignees[0]) }}
+                </div>
+              </ng-template>
+              <div *ngIf="t.assignees.length > 1"
+                  class="more-count"
+                  [matTooltip]="getAssigneesTooltip(t.assignees)">
+                +{{ t.assignees.length - 1 }}
+              </div>
+            </ng-container>
+            <ng-template #noAssignee>—</ng-template>
+          </td>
+        </ng-container>
+
+        <!-- DATA -->
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="opening_date">Data</th>
+          <td mat-cell *matCellDef="let t">{{ trasformDateHours(t.opening_date) }}</td>
+        </ng-container>
+
+        <!-- AZIONI -->
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef>Azioni</th>
+          <td mat-cell *matCellDef="let t" class="action-cell">
+            <ng-container *ngIf="showTicketActions; else emptyAction">
+              <button mat-icon-button [matMenuTriggerFor]="actionsMenu" aria-label="Azioni">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #actionsMenu="matMenu">
+                <button mat-menu-item (click)="redirectTo('tickets/' + t.id)">
+                  <mat-icon>visibility</mat-icon><span>Visualizza</span>
+                </button>
+                <button mat-menu-item (click)="redirectTo('/tickets/edit/' + t.id)">
+                  <mat-icon>edit</mat-icon><span>Modifica</span>
+                </button>
+                <button mat-menu-item (click)="togglePayments(t)" [disabled]="busyToggle.has(t.id)">
+                  <mat-icon>{{ t.payments_status ? 'undo' : 'check_circle' }}</mat-icon>
+                  <span>{{ t.payments_status ? 'Segna come NON pagato' : 'Segna come pagato' }}</span>
+                </button>
+              </mat-menu>
+            </ng-container>
+            <ng-template #emptyAction>
+              <span class="text-muted">—</span>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <!-- ROWS -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.row-unread]="row.has_unread"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="total"
+        [pageIndex]="pageIndex"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        aria-label="Select page"
+        (page)="onPageChange($event)">
+      </mat-paginator>
+    </div>
+  </div>
+ </div>
+
+<!-- MOBILE (CARD LIST) -->
+<div class="container-fluid mobile">
+  <div *ngFor="let t of tickets" class="ed-block-standard d-md-none">
+    <div class="mobile-card">
+      <div class="mobile-header">
+        <div class="mobile-title" (click)="redirectTo('tickets/' + t.id)">
+          <div class="title-main">{{ truncate(t.title, 40) }}</div>
+          <div class="title-sub" *ngIf="getProjectLabel(t) as proj">{{ proj }}</div>
+        </div>
+        <div class="mobile-assignee">
+          <ng-container *ngIf="t.assignees?.length; else noAssigneeM">
+            <ng-container *ngIf="t.assignees[0]?.avatar && !hasAvatarError(t.assignees[0]); else initialsAvatarM">
+              <img class="avatar"
+                   [src]="t.assignees[0].avatar"
+                   [alt]="getFullName(t.assignees[0])"
+                   loading="lazy"
+                   (error)="markAvatarError(t.assignees[0])" />
+            </ng-container>
+            <ng-template #initialsAvatarM>
+              <div class="avatar initials">{{ getInitials(t.assignees[0]) }}</div>
+            </ng-template>
+          </ng-container>
+          <ng-template #noAssigneeM>—</ng-template>
+        </div>
+      </div>
+
+      <div class="mobile-meta">
+        <span class="status-dot" [ngClass]="getStatusClass(t.status)"></span>
+        <span class="mobile-status">
+          {{ (t.status == 'open' ? 'Aperto' : '') ||
+             (t.status == 'in_progress' ? 'In carico' : '') ||
+             (t.status == 'resolved' ? 'Risolto' : '') ||
+             (t.status == 'closed' ? 'Chiuso' : '') }}
+        </span>
+
+        <span class="type-badge ml-1" [ngClass]="getTicketTypeClass(t.ticket_type)">
+          {{ normalizeTypeLabel(t.ticket_type) }}
+        </span>
+        <span class="type-badge payment-badge ml-1" [ngClass]="getPaymentBadgeClass(t.payments_status)">
+          {{ t.payments_status ? 'Pagato' : 'Non pagato' }}
+        </span>
+
+        <span class="mobile-priority priority-badge" [ngClass]="getPriorityClass(t.priority)">
+          {{ formatPriorityLabel(t.priority) }}
+        </span>
+      </div>
+
+      <div class="mobile-row">
+        <span class="mobile-label">Client: </span>
+        <span class="mobile-value">
+          {{ t.client?.first_name || t.client?.username || t.client?.email || '—' }}
+        </span>
+      </div>
+
+      <div class="mobile-row">
+        <span class="mobile-label">Data: </span>
+        <span class="mobile-value"> {{ trasformDateHours(t.opening_date) }}</span>
+      </div>
+
+      <div class="row mt-2">
+        <div class="col">
+          <button id="btnFull" mat-raised-button class="primary-button" (click)="redirectTo('tickets/' + t.id)">VISUALIZZA</button>
+        </div>
+        <div class="col text-right">
+          <button id="btnFull" mat-raised-button class="primary-button-light" (click)="redirectTo('/tickets/edit/' + t.id)">MODIFICA</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MINI CARD TOTALI (desktop + mobile) -->
+<div class="container-fluid mt-3">
+  <div class="totals-card" *ngIf="tickets?.length">
+    <div class="totals-left">
+      <div class="tot-title">Totali periodo selezionato</div>
+      <div class="tot-subtitle">
+        {{ selectedYear }}<span *ngIf="selectedMonthIdx"> · {{ monthLabel(selectedMonthIdx) }}</span>
+      </div>
+    </div>
+    <div class="totals-right">
+      <div class="tot-item">
+        <div class="tot-label">Minuti</div>
+        <div class="tot-value">{{ minutesTotal }}</div>
+      </div>
+      <div class="tot-item">
+        <div class="tot-label">Quotazioni (no Bug)</div>
+        <div class="tot-value">{{ quotesTotal | number:'1.0-2' }} €</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,95 @@
+<div class="mx-auto max-w-6xl px-6 py-8">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-900">Documenti</h1>
+      <p class="text-sm text-slate-500">Gestisci e modifica i tuoi documenti.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <app-workspace-selector></app-workspace-selector>
+      <button
+        type="button"
+        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+        (click)="goToCreate()"
+      >
+        Nuovo Documento
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3 items-end">
+    <div class="tw-field">
+      <label class="tw-label">Status</label>
+      <app-tw-select
+        [(ngModel)]="selectedStatus"
+        (selectionChange)="loadDocuments()"
+        [items]="statuses"
+        bindValue="id"
+        bindLabel="title"
+        placeholder="Tutti gli status"
+      ></app-tw-select>
+    </div>
+
+    <div class="tw-field">
+      <label class="tw-label">Tipo</label>
+      <app-tw-select
+        [(ngModel)]="selectedType"
+        (selectionChange)="loadDocuments()"
+        [items]="types"
+        bindValue="id"
+        bindLabel="title"
+        placeholder="Tutti i tipi"
+      ></app-tw-select>
+    </div>
+
+    <div class="flex items-end">
+      <button
+        type="button"
+        class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+        (click)="resetFilters()"
+      >
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-6" *ngIf="loading">
+    <div class="flex items-center gap-2 text-sm text-slate-500">
+      <div class="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"></div>
+      Caricamento...
+    </div>
+  </div>
+
+  <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white" *ngIf="!loading">
+    <table class="min-w-full text-left text-sm">
+      <thead class="bg-slate-50 text-slate-500">
+        <tr>
+          <th class="px-4 py-3 font-medium">Titolo</th>
+          <th class="px-4 py-3 font-medium">Tipo</th>
+          <th class="px-4 py-3 font-medium">Status</th>
+          <th class="px-4 py-3 font-medium">Modificabile</th>
+          <th class="px-4 py-3 font-medium text-right">Azioni</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr *ngFor="let doc of documents" class="hover:bg-slate-50">
+          <td class="px-4 py-3 font-medium text-slate-900">{{ doc.title }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ getTypeLabel(doc.type) }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ getStatusLabel(doc.status) }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ doc.is_editable ? 'Si' : 'No' }}</td>
+          <td class="px-4 py-3 text-right">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              (click)="goToDocument(doc)"
+            >
+              Apri
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="documents.length === 0">
+          <td colspan="5" class="px-4 py-6 text-center text-sm text-slate-500">Nessun documento.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

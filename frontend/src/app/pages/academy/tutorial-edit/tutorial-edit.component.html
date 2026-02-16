@@ -1,0 +1,101 @@
+<div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1>Modifica tutorial</h1>
+      </div>
+      <div class="col-md-auto text-md-right">
+        <button id="btn" mat-raised-button class="primary-button-light" (click)="redirectTo('academy/tutorial-details/' + idTutorial)">
+            <span>ANNULLA</span>
+        </button>
+        <button  id="btn" mat-raised-button class="primary-button" (click)="saveTutorial()">
+          <span>SALVA MODIFICHE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="ed-block-standard">
+        <div [formGroup]="tutorialForm" class="form">
+            <div class="tw-field" style="width: 100%;">
+                <label class="tw-label">Link YouTube</label>
+                <input
+                  class="tw-input"
+                  placeholder="es. https://www.youtube.com/watch?v=idvideo"
+                  formControlName="link"
+                >
+            </div>
+            <div class="tw-field" style="width: 100%;">
+                <label class="tw-label">Titolo</label>
+                <textarea
+                  class="tw-textarea"
+                  placeholder="Titolo del tutorial"
+                  formControlName="title"
+                ></textarea>
+            </div>
+            <div class="rich-description-field tw-field">
+              <label class="field-label">Descrizione</label>
+              <app-rich-text-editor
+                formControlName="description"
+                placeholder="Descrizione del tutorial"
+                style="--editor-min-height: 200px;"
+              ></app-rich-text-editor>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Categoria</label>
+              <app-tw-select
+                placeholder="Associa il tutorial ad almeno una categoria"
+                formControlName="category"
+                [items]="categories"
+                bindValue="id"
+                bindLabel="title"
+                [multiple]="true"
+              ></app-tw-select>
+          </div>
+            <div class="tw-field" style="width: 100%;">
+                <label class="tw-label">Associa Prodotti</label>
+                <app-tw-select
+                  placeholder="Associa il tutorial ad un prodotto"
+                  formControlName="project"
+                  [items]="projectList"
+                  bindValue="id"
+                  bindLabel="title"
+                  [multiple]="true"
+                ></app-tw-select>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Lunghezza</label>
+              <input
+                class="tw-input"
+                type="number"
+                placeholder="Lunghezza del video in minuti"
+                formControlName="duration"
+              >
+            </div>
+            <div class="tw-field" style="width: 100%">
+              <label class="tw-label">Difficoltà</label>
+              <app-tw-select
+                placeholder="Difficoltà del tutorial"
+                formControlName="level"
+                [items]="[
+                  { value: 'low', label: 'Bassa' },
+                  { value: 'medium', label: 'Media' },
+                  { value: 'High', label: 'Alta' }
+                ]"
+                bindValue="value"
+                bindLabel="label"
+              ></app-tw-select>
+          </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Autore</label>
+              <app-tw-select
+                placeholder="Associa il video ad un autore"
+                formControlName="author"
+                [items]="workerList"
+                bindValue="id"
+                [labelKeys]="['first_name', 'last_name']"
+              ></app-tw-select>
+          </div>
+        </div>
+    </div>
+</div>

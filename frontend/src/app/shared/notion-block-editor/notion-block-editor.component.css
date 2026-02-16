@@ -1,0 +1,9 @@
+.notion-block:empty:before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+}
+
+.notion-block {
+  min-height: 28px;
+  white-space: pre-wrap;
+}

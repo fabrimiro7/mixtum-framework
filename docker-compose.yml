@@ -28,7 +28,21 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: app-nginx-1
+    container_name: app-nginx-backend
+    profiles: ["backend"]
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+
+  nginx_frontend:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: app-nginx-frontend
+    profiles: ["frontend"]
     depends_on:
       - web
     ports:

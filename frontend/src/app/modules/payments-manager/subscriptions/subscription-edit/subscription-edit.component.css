@@ -1,0 +1,27 @@
+#btn {
+    margin: 0px 0px 0px 10px;
+  }
+
+  .status-active {
+    color: var(--ed-green);
+  }
+  
+  .status-expired {
+    color: var(--ed-red);
+  }
+
+  @media screen and (max-width: 767px) {
+    #btn {
+      width: 100%;
+      margin-bottom: 15px;
+      margin-left: 0px ;
+      
+    }
+  
+    .ed-block-standard {
+      margin-bottom: 15px;
+      margin-left: 0px;
+      margin-right: 0px;
+      border-radius: 25px;
+    }
+  }

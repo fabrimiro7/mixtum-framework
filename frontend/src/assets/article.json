@@ -1,0 +1,21 @@
+[
+    {
+      "id": 1,
+      "image": "https://example.com/images/article1.jpg",
+      "title": "Introduzione a JavaScript",
+      "description": "Un articolo che esplora le basi di JavaScript, il linguaggio di programmazione più usato per il web."
+    },
+    {
+      "id": 2,
+      "image": "https://example.com/images/article2.jpg",
+      "title": "Guida Completa a CSS Flexbox",
+      "description": "Impara come usare Flexbox per creare layout flessibili e reattivi per il tuo sito web."
+    },
+    {
+      "id": 3,
+      "image": "https://example.com/images/article3.jpg",
+      "title": "10 Strumenti Essenziali per Sviluppatori",
+      "description": "Scopri i migliori strumenti per migliorare la produttività e il flusso di lavoro dello sviluppo."
+    }
+  ]
+  

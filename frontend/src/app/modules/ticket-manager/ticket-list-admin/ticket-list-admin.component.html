@@ -1,0 +1,245 @@
+<!-- HEADER -->
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Tickets</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button id="btn" mat-raised-button class="primary-button mr-2" (click)="redirectTo('tickets/')">
+        <span>Vista Semplice</span>
+      </button>
+      <button id="btn" mat-raised-button class="primary-button" (click)="redirectTo('tickets/add/')">
+        <span>Apri un ticket</span>
+        <mat-icon fontIcon="add"></mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CHIPS (FILTRI) -->
+<div class="container-fluid">
+  <mat-chip-list *ngIf="userType == 'SuperAdmin'">
+    <mat-chip *ngFor="let filter of SuperAdminFilter"
+              (click)="selectedFilter(filter)"
+              [class.selected]="filter.isActive">
+      {{ filter.name }}
+    </mat-chip>
+  </mat-chip-list>
+
+  <mat-chip-list *ngIf="userType == 'Admin'">
+    <mat-chip *ngFor="let filter of AdminFilter"
+              (click)="selectedFilter(filter)"
+              [class.selected]="filter.isActive">
+      {{ filter.name }}
+    </mat-chip>
+  </mat-chip-list>
+
+  <mat-chip-list *ngIf="userType == 'Utente'">
+    <mat-chip *ngFor="let filter of UserFilter"
+              (click)="selectedFilter(filter)"
+              [class.selected]="filter.isActive">
+      {{ filter.name }}
+    </mat-chip>
+  </mat-chip-list>
+
+  <!-- DESKTOP TABLE -->
+  <div class="mt-3">
+    <div class="totals-card">
+      <div class="d-none d-md-block ed-full-width">
+        <table mat-table
+              [dataSource]="tickets"
+              matSort
+              (matSortChange)="onSortChange($event)"
+              [matSortActive]="sortActive"
+              [matSortDirection]="sortDirection"
+              class="comfortable-table">
+
+          <!-- ID -->
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="id">ID</th>
+            <td mat-cell *matCellDef="let t">#{{ t.id }}</td>
+          </ng-container>
+
+          <!-- IN ATTESA DI RISPOSTA -->
+          <ng-container matColumnDef="awaiting_response">
+            <th mat-header-cell *matHeaderCellDef>Risposta</th>
+            <td mat-cell *matCellDef="let t">
+              <span *ngIf="isAwaitingResponse(t)" class="awaiting-response">In attesa di risposta</span>
+              <span *ngIf="!isAwaitingResponse(t)">—</span>
+            </td>
+          </ng-container>
+
+          <!-- TITOLO + PROGETTO (sottotitolo grigio) -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Titolo</th>
+            <td mat-cell *matCellDef="let t" id="title" (click)="redirectTo('tickets/' + t.id)">
+              <div class="title-wrap">
+                <div class="title-main">{{ truncate(t.title, 60) }}</div>
+                <div class="title-sub" *ngIf="getProjectLabel(t) as proj">{{ proj }}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- CLIENT -->
+          <ng-container matColumnDef="client">
+            <th mat-header-cell *matHeaderCellDef>Client</th>
+            <td mat-cell *matCellDef="let t">
+              {{ t.client?.first_name || t.client?.username || t.client?.email || '—' }}
+            </td>
+          </ng-container>
+
+          <!-- STATO -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Stato</th>
+            <td mat-cell *matCellDef="let t">
+              <span [ngClass]="getStatusClass(t.status)" class="status-dot"></span>
+              {{ (t.status == 'open' ? 'Aperto' : '') ||
+                (t.status == 'in_progress' ? 'Preso in carico' : '') ||
+                (t.status == 'resolved' ? 'Risolto' : '') ||
+                (t.status == 'closed' ? 'Chiuso' : '') }}
+            </td>
+          </ng-container>
+
+          <!-- PRIORITÀ -->
+          <ng-container matColumnDef="priority">
+            <th mat-header-cell *matHeaderCellDef>Priorità</th>
+            <td mat-cell *matCellDef="let t">
+              <div [ngClass]="getPriorityClass(t.priority)">
+                {{ (t.priority == 'low' ? 'Bassa' : '') ||
+                  (t.priority == 'medium' ? 'Media' : '') ||
+                  (t.priority == 'high' ? 'Alta' : '') || '-' }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- ASSEGNATARIO (Avatar) -->
+          <ng-container matColumnDef="assignee">
+            <th mat-header-cell *matHeaderCellDef>Assegnatario</th>
+            <td mat-cell *matCellDef="let t">
+              <ng-container *ngIf="t.assignees?.length; else noAssignee">
+                <ng-container *ngIf="t.assignees[0]?.avatar && !$any(t).__imgErr; else initialsAvatar">
+                  <img class="avatar"
+                      [src]="t.assignees[0].avatar"
+                      [alt]="getFullName(t.assignees[0])"
+                      loading="lazy"
+                      (error)="$any(t).__imgErr = true"
+                      matTooltip="{{ getFullName(t.assignees[0]) }}" />
+                </ng-container>
+                <ng-template #initialsAvatar>
+                  <div class="avatar initials" matTooltip="{{ getFullName(t.assignees[0]) }}">
+                    {{ getInitials(t.assignees[0]) }}
+                  </div>
+                </ng-template>
+                <div *ngIf="t.assignees.length > 1"
+                    class="more-count"
+                    matTooltip="{{ getAssigneesTooltip(t.assignees) }}">
+                  +{{ t.assignees.length - 1 }}
+                </div>
+              </ng-container>
+              <ng-template #noAssignee>—</ng-template>
+            </td>
+          </ng-container>
+
+          <!-- DATA (solo apertura) -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="opening_date">Data</th>
+            <td mat-cell *matCellDef="let t">{{ trasformDateHours(t.opening_date) }}</td>
+          </ng-container>
+
+          <!-- AZIONI -->
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef>Azioni</th>
+            <td mat-cell *matCellDef="let t" class="action-cell">
+              <button mat-icon-button [matMenuTriggerFor]="actionsMenu" aria-label="Azioni">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #actionsMenu="matMenu">
+                <button mat-menu-item (click)="redirectTo('tickets/' + t.id)">
+                  <mat-icon>visibility</mat-icon><span>Visualizza</span>
+                </button>
+                <button mat-menu-item *ngIf="userType != 'Utente'" (click)="redirectTo('/tickets/edit/' + t.id)">
+                  <mat-icon>edit</mat-icon><span>Modifica</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: getDisplayedColumns()" [class.row-unread]="row.has_unread"></tr>
+        </table>
+
+        <mat-paginator
+          [length]="total"
+          [pageIndex]="pageIndex"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          aria-label="Select page"
+          (page)="onPageChange($event)">
+        </mat-paginator>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE (CARD LIST) -->
+  <div class="container-fluid mobile">
+    <div *ngFor="let t of tickets" class="ed-block-standard d-md-none">
+      <div class="mobile-card">
+        <div class="mobile-header">
+          <div class="mobile-title" (click)="redirectTo('tickets/' + t.id)">
+            <div class="title-main">{{ truncate(t.title, 40) }}</div>
+            <div class="title-sub" *ngIf="getProjectLabel(t) as proj">{{ proj }}</div>
+          </div>
+          <div class="mobile-assignee">
+            <ng-container *ngIf="t.assignees?.length; else noAssigneeM">
+              <ng-container *ngIf="t.assignees[0]?.avatar && !$any(t).__imgErrM; else initialsAvatarM">
+                <img class="avatar"
+                    [src]="t.assignees[0].avatar"
+                    [alt]="getFullName(t.assignees[0])"
+                    loading="lazy"
+                    (error)="$any(t).__imgErrM = true" />
+              </ng-container>
+              <ng-template #initialsAvatarM>
+                <div class="avatar initials">{{ getInitials(t.assignees[0]) }}</div>
+              </ng-template>
+            </ng-container>
+            <ng-template #noAssigneeM>—</ng-template>
+          </div>
+        </div>
+
+        <div class="mobile-meta">
+          <span class="status-dot" [ngClass]="getStatusClass(t.status)"></span>
+          <span class="mobile-status">
+            {{ (t.status == 'open' ? 'Aperto' : '') ||
+               (t.status == 'in_progress' ? 'In carico' : '') ||
+               (t.status == 'resolved' ? 'Risolto' : '') ||
+               (t.status == 'closed' ? 'Chiuso' : '') }}
+          </span>
+          <span class="mobile-priority" [ngClass]="getPriorityClass(t.priority)">
+            {{ (t.priority == 'low' ? 'Bassa' : '') ||
+               (t.priority == 'medium' ? 'Media' : '') ||
+               (t.priority == 'high' ? 'Alta' : '') || '-' }}
+          </span>
+        </div>
+
+        <div class="mobile-row">
+          <span class="mobile-label">Client: </span>
+          <span class="mobile-value"> {{ t.client?.first_name || t.client?.username || t.client?.email || '—' }}</span>
+        </div>
+
+        <div class="mobile-row">
+          <span class="mobile-label">Data: </span>
+          <span class="mobile-value"> {{ trasformDateHours(t.opening_date) }}</span>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col">
+            <button id="btnFull" mat-raised-button class="primary-button" (click)="redirectTo('tickets/' + t.id)">VISUALIZZA</button>
+          </div>
+          <div *ngIf="userType != 'Utente'" class="col text-right">
+            <button id="btnFull" mat-raised-button class="primary-button-light" (click)="redirectTo('/tickets/edit/' + t.id)">MODIFICA</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

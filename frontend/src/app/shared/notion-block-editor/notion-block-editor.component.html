@@ -1,0 +1,103 @@
+<div *ngIf="blocks.length === 0" class="rounded-lg border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+  <div class="flex items-center justify-between">
+    <span>Nessun blocco. Inizia a scrivere.</span>
+    <button
+      type="button"
+      class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      (click)="addFirstBlock()"
+      [disabled]="disabled"
+    >
+      Aggiungi blocco
+    </button>
+  </div>
+</div>
+
+<div class="space-y-3" cdkDropList (cdkDropListDropped)="drop($event)" *ngIf="blocks.length > 0">
+  <div
+    class="group flex items-start gap-2"
+    *ngFor="let block of blocks; let i = index"
+    cdkDrag
+  >
+    <div class="flex items-center gap-2 pt-1">
+      <button
+        *ngIf="allowInsert"
+        type="button"
+        class="h-6 w-6 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50"
+        (click)="toggleInsertMenu(i)"
+        [disabled]="disabled"
+        aria-label="Aggiungi blocco"
+      >
+        +
+      </button>
+      <span class="cursor-grab text-slate-300" cdkDragHandle>
+        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="6" r="1.5"></circle>
+          <circle cx="5" cy="14" r="1.5"></circle>
+          <circle cx="10" cy="6" r="1.5"></circle>
+          <circle cx="10" cy="14" r="1.5"></circle>
+          <circle cx="15" cy="6" r="1.5"></circle>
+          <circle cx="15" cy="14" r="1.5"></circle>
+        </svg>
+      </span>
+    </div>
+
+    <div class="flex-1">
+      <div class="relative">
+        <div
+          *ngIf="block.type !== 'divider'"
+          class="notion-block focus:outline-none"
+          [ngClass]="{
+            'text-3xl font-semibold': block.type === 'heading1',
+            'text-2xl font-semibold': block.type === 'heading2',
+            'italic border-l-2 border-slate-300 pl-3 text-slate-600': block.type === 'quote',
+            'text-base': block.type === 'paragraph' || block.type === 'bulleted' || block.type === 'numbered'
+          }"
+          contenteditable="true"
+          spellcheck="false"
+          [attr.data-placeholder]="placeholderFor(block)"
+          [innerHTML]="displayContent(block)"
+          (input)="onBlockInput(i, $event)"
+          (blur)="touch()"
+        ></div>
+
+        <div *ngIf="block.type === 'divider'" class="py-2">
+          <div class="border-t border-slate-200"></div>
+        </div>
+
+        <div *ngIf="slashMenuIndex === i" class="absolute z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white shadow-lg">
+          <button
+            *ngFor="let type of blockTypes"
+            type="button"
+            class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50"
+            (click)="setBlockType(i, type.type, true)"
+          >
+            <span>{{ type.label }}</span>
+          </button>
+        </div>
+
+        <div *ngIf="insertMenuIndex === i" class="absolute z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white shadow-lg">
+          <button
+            *ngFor="let type of blockTypes"
+            type="button"
+            class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50"
+            (click)="insertBlock(i, type.type)"
+          >
+            <span>{{ type.label }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500"
+      (click)="deleteBlock(i)"
+      [disabled]="disabled"
+      aria-label="Rimuovi blocco"
+    >
+      <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M6.5 4a.5.5 0 00-.5.5V6h8V4.5a.5.5 0 00-.5-.5h-7zM5 6h10l-.805 9.66A2 2 0 0112.201 17H7.8a2 2 0 01-1.994-1.34L5 6z" clip-rule="evenodd"></path>
+      </svg>
+    </button>
+  </div>
+</div>

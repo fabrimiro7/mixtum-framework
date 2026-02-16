@@ -1,0 +1,26 @@
+<mat-toolbar class="ed-toolbar">
+  <button mat-icon-button class="example-icon" (click)="toggleMenu()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span class="ed-header-title">ED Platform</span>
+  <div class="ml-4 flex items-center gap-2" *ngIf="showWorkspaceSelector">
+    <span class="tw-label text-sm">Workspace</span>
+    <app-tw-select
+      class="py-1.5 text-sm"
+      [ngModel]="activeWorkspaceId"
+      (selectionChange)="onWorkspaceChange($event.value)"
+      [items]="workspaces"
+      bindValue="id"
+      bindLabel="workspace_name"
+      placeholder="Seleziona"
+    ></app-tw-select>
+  </div>
+  <span class="example-spacer"></span>
+  <button mat-icon-button class="example-icon favorite-icon" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+  </button>
+  <button mat-icon-button class="example-icon" (click)="account()">
+    <img [src]="avatarUrl" width="30px" height="30px" *ngIf="avatarUrl != '' && avatarUrl != undefined">
+    <mat-icon *ngIf="avatarUrl == '' || avatarUrl == undefined">account_circle</mat-icon>
+  </button>
+</mat-toolbar>

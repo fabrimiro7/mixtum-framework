@@ -1,0 +1,176 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row align-items-center mb-4">
+    <div class="col">
+      <h1>Nuovo Movimento</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button mat-raised-button class="primary-button-light me-2" (click)="cancel()">
+        <span>ANNULLA</span>
+      </button>
+      <button mat-raised-button class="primary-button" (click)="onSubmit()" [disabled]="loading">
+        <span>SALVA</span>
+        <mat-icon fontIcon="arrow_forward"></mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="ed-block-standard">
+    <form [formGroup]="transactionForm" class="tw-form-grid">
+      <div class="row">
+        <!-- Type -->
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Tipo Movimento</label>
+          <app-tw-select
+            formControlName="transaction_type"
+            [items]="typeOptions"
+            bindValue="value"
+            bindLabel="label"
+            (selectionChange)="onTypeChange()"
+          ></app-tw-select>
+        </div>
+
+        <!-- Status -->
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Stato</label>
+          <app-tw-select
+            formControlName="status"
+            [items]="statusOptions"
+            bindValue="value"
+            bindLabel="label"
+          ></app-tw-select>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Account -->
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Conto</label>
+          <app-tw-select
+            formControlName="account"
+            [items]="accounts"
+            bindValue="id"
+            [labelKeys]="['name', 'bank.name']"
+          ></app-tw-select>
+          <p class="tw-error" *ngIf="transactionForm.get('account')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <!-- Category -->
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Categoria</label>
+          <app-tw-select
+            formControlName="category"
+            [items]="getFilteredCategories()"
+            bindValue="id"
+            bindLabel="name"
+          ></app-tw-select>
+          <p class="tw-error" *ngIf="transactionForm.get('category')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="w-100 tw-field">
+        <label class="tw-label">Descrizione</label>
+        <textarea
+          class="tw-textarea"
+          formControlName="description"
+          rows="2"
+          placeholder="Descrizione del movimento"
+        ></textarea>
+        <p class="tw-error" *ngIf="transactionForm.get('description')?.hasError('required')">
+          Campo obbligatorio
+        </p>
+      </div>
+
+      <div class="row">
+        <!-- Amount -->
+        <div class="col-md-4 tw-field">
+          <label class="tw-label">Importo Lordo (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            formControlName="gross_amount"
+            step="0.01"
+            min="0.01"
+          >
+          <p class="tw-error" *ngIf="transactionForm.get('gross_amount')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+          <p class="tw-error" *ngIf="transactionForm.get('gross_amount')?.hasError('min')">
+            L'importo deve essere maggiore di zero
+          </p>
+        </div>
+
+        <!-- VAT -->
+        <div class="col-md-4 tw-field">
+          <label class="tw-label">IVA</label>
+          <app-tw-select
+            formControlName="vat_percentage"
+            [items]="vatOptions"
+            bindValue="value"
+            bindLabel="label"
+          ></app-tw-select>
+        </div>
+
+        <!-- Hypothetical -->
+        <div class="col-md-4 d-flex align-items-center">
+          <mat-slide-toggle formControlName="is_hypothetical">
+            Movimento Ipotetico
+          </mat-slide-toggle>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Competence Date -->
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Data Competenza</label>
+          <input
+            class="tw-input"
+            type="date"
+            formControlName="competence_date"
+          >
+          <p class="tw-error" *ngIf="transactionForm.get('competence_date')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <!-- Payment Date -->
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Data Pagamento</label>
+          <input
+            class="tw-input"
+            type="date"
+            formControlName="payment_date"
+          >
+          <p class="tw-help">Lasciare vuoto se non ancora pagato</p>
+        </div>
+      </div>
+
+      <!-- External Reference -->
+      <div class="w-100 tw-field">
+        <label class="tw-label">Riferimento Esterno</label>
+        <input
+          class="tw-input"
+          formControlName="external_reference"
+          placeholder="Es: Numero fattura, ID transazione bancaria"
+        >
+      </div>
+
+      <!-- Notes -->
+      <div class="w-100 tw-field">
+        <label class="tw-label">Note</label>
+        <textarea
+          class="tw-textarea"
+          formControlName="notes"
+          rows="3"
+          placeholder="Note aggiuntive..."
+        ></textarea>
+      </div>
+    </form>
+  </div>
+</div>

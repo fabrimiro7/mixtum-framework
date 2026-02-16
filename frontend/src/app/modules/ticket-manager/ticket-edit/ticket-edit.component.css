@@ -1,0 +1,49 @@
+#btn {
+  margin: 0px 0px 0px 10px;
+
+}
+
+#btnDelete {
+  margin-left: 10px;
+}
+
+.detail-field {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+
+.messageBubble {
+  padding: 3%;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  background-color: azure;
+}
+
+.rich-description-field {
+  margin-bottom: 20px;
+}
+
+.rich-description-field .field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.messageBubble .message-content {
+  white-space: pre-wrap;
+  margin-bottom: 8px;
+}
+
+@media screen and (max-width: 767px) {
+  #btn {
+    width: 100%;
+    margin: 0px 0px 15px 0px;
+  }
+
+  .ed-block-standard {
+    margin-bottom: 15px;
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+}

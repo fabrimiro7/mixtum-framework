@@ -1,0 +1,108 @@
+.user-profile-container {
+    display: flex;
+    margin: 20px;
+  }
+  
+  .left-block {
+    flex: 1;
+    background-color: white;
+    border-radius: 15px 15px 15px 15px;
+    padding: 20px;
+    box-shadow: 2px 2px 5px rgba(169, 169, 169, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .avatar {
+    max-width: 250px;
+    max-height: 250px;
+    border-radius: 50%;
+  }
+  
+  .right-block {
+    flex: 2;
+    background-color: white;
+    border-radius: 15px 15px 15px 15px;
+    padding: 40px;
+    margin-left:15px;
+    box-shadow: 2px 2px 5px rgba(169, 169, 169, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .right-block h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+  
+  .user-info p {
+    margin: 5px 0;
+  }
+  .right-block h3 {
+    color: var(--ed-blue-dark);
+  }
+
+  .primary-button, .primary-button-light{
+    margin-left: 0px;
+  }
+
+  .primary-button:hover, .primary-button-light:hover{
+    margin-left: 0px;
+  }
+  
+  .user-info {
+    font-family: 'Cabin', sans-serif;
+  }
+
+  .cdk-overlay-pane {
+    position: absolute;
+    pointer-events: auto;
+    box-sizing: border-box;
+    z-index: 1000;
+    display: flex;
+    flex: 1 1 auto;
+    max-width: 80vw;
+    max-height: 80vh;
+    width: 100%;
+    height: 100%;
+  }
+  
+  @media (max-width: 480px) {
+    .cdk-overlay-pane {
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+  }
+  
+  @media (max-width: 912px) {
+    .cdk-overlay-pane {
+      max-width: 85vw;
+      max-height: 85vh;
+    }
+    .user-profile-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .right-block {
+      margin-left: 0px;
+      margin-top: 15px;
+      align-items: center;
+    }
+    .user-profile-container {
+      display: flex;
+      margin: 20px;
+      flex-direction: column;
+    }
+    .primary-button, .primary-button-light {
+      width: 100%;
+    }
+  }
+  
+  @media (min-width: 767px) {
+    .cdk-overlay-pane {
+      max-width: 80vw;
+      max-height: 80vh;
+    }
+  }
+  

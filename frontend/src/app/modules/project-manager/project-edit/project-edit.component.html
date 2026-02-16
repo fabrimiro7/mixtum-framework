@@ -1,0 +1,140 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Modifica progetto</h1>
+    </div>
+    <div class="col-md-auto text-md-right btn-bar">
+      <button id="btn-cancel" mat-raised-button class="primary-button-light"
+              (click)="redirectTo('projects/' + idProject)">
+        <span>ANNULLA</span>
+      </button>
+
+      <button id="btn-save" mat-raised-button class="primary-button"
+              (click)="saveProject()">
+        <span>SALVA MODIFICHE</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="ed-block-standard">
+    <form [formGroup]="projectForm" class="form tw-form-grid">
+
+      <!-- TITOLO + CLIENTE -->
+      <div class="grid grid-2">
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Titolo</label>
+          <input
+            class="tw-input"
+            formControlName="title"
+          >
+          <p class="tw-error" *ngIf="projectForm.get('title')?.hasError('required')">
+            Campo obbligatorio
+          </p>
+        </div>
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Cliente</label>
+          <app-tw-select
+            formControlName="client"
+            [items]="clientList"
+            bindValue="id"
+            [labelKeys]="['first_name', 'last_name']"
+            placeholder="Seleziona un cliente"
+          ></app-tw-select>
+          <p class="tw-error" *ngIf="projectForm.get('client')?.hasError('required')">
+            Seleziona un cliente
+          </p>
+        </div>
+
+      </div>
+
+      <!-- DESCRIZIONE -->
+      <div class="w-100 tw-field">
+        <label class="tw-label">Descrizione</label>
+        <textarea
+          class="tw-textarea"
+          formControlName="description"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- DATA CREAZIONE -->
+      <div class="w-100 tw-field" *ngIf="projectForm.get('insert_date')">
+        <label class="tw-label">Data creazione</label>
+        <input
+          class="tw-input"
+          formControlName="insert_date"
+          readonly
+        >
+      </div>
+
+      <!-- PREVENTIVI -->
+      <div class="grid grid-3">
+        <div class="w-100 tw-field">
+          <label class="tw-label">Tariffa oraria minima (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="hours_quote_min"
+          >
+        </div>
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Tariffa oraria media (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="hours_quote_mid"
+          >
+        </div>
+
+        <div class="w-100 tw-field">
+          <label class="tw-label">Tariffa oraria massima (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="hours_quote_max"
+          >
+        </div>
+      </div>
+
+      <!-- LIMITE MENSILE -->
+      <div class="grid grid-1">
+        <div class="w-100 tw-field">
+          <label class="tw-label">Limite di costo mensile (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="month_cost_limit"
+            placeholder="es. 2000.00"
+          >
+        </div>
+      </div>
+
+      <!-- CONTRIBUTORS -->
+      <div class="w-100 tw-field">
+        <label class="tw-label">Associati</label>
+        <app-tw-select
+          formControlName="contributors"
+          [items]="userList"
+          [labelKeys]="['first_name', 'last_name']"
+          [compareWith]="compareFn"
+          [multiple]="true"
+          placeholder="Seleziona associati"
+        ></app-tw-select>
+      </div>
+
+    </form>
+  </div>
+</div>

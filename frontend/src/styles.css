@@ -1,0 +1,556 @@
+/* You can add global styles to this file, and also import other style files */
+@import "../node_modules/@angular/material/prebuilt-themes/indigo-pink.css";
+@import "../node_modules/angular-calendar/css/angular-calendar.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    height: 100%;
+    background-color: #f4f7fa;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Cabin', sans-serif;
+    color: var(--ed-gray-text);
+  }
+
+  h1 {
+    font-size: 40px;
+    font-weight: 500;
+    color: var(--ed-blue-dark);
+  }
+
+  h2 {
+    font-size: 34px;
+    font-weight: 500;
+    color: var(--ed-blue-dark);
+  }
+
+  h3 {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--ed-gray-text);
+  }
+
+  h4 {
+    color: var(--ed-gray-text);
+    font-weight: 500;
+  }
+
+  p {
+    color: var(--ed-gray-text);
+    font-weight: 400;
+  }
+
+  a {
+    color: var(--ed-blue);
+  }
+}
+
+@layer components {
+  .tw-form-grid {
+    @apply grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2;
+  }
+
+  .tw-form-stack {
+    @apply space-y-6;
+  }
+
+  .tw-span-2 {
+    @apply lg:col-span-2;
+  }
+
+  .tw-field {
+    @apply space-y-2.5;
+  }
+
+  .tw-label {
+    @apply block text-sm/6 font-medium text-gray-900;
+  }
+
+  .tw-input {
+    @apply appearance-none border-0 bg-white;
+    @apply block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400;
+    @apply focus:outline-2 focus:-outline-offset-2 focus:outline-ed-blue;
+    @apply disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500;
+  }
+
+  .tw-textarea {
+    @apply appearance-none border-0 bg-white;
+    @apply block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400;
+    @apply focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ed-blue;
+    @apply sm:text-sm/6;
+    @apply disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500;
+  }
+
+  .tw-error {
+    @apply mt-1 text-sm text-red-600;
+  }
+
+  .tw-help {
+    @apply text-sm/6 text-gray-400;
+  }
+
+  .tw-input-addon {
+    @apply relative;
+  }
+
+  .tw-input-suffix {
+    @apply pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500;
+  }
+
+  .tw-input-icon {
+    @apply absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500;
+    @apply bg-transparent border-0 p-0;
+    @apply rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ed-blue;
+    @apply hover:text-gray-600;
+  }
+
+  .tw-select-trigger {
+    @apply appearance-none border-0 bg-white;
+    @apply grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-gray-300;
+    @apply focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ed-blue sm:text-sm/6;
+  }
+
+  .tw-select-selected {
+    @apply col-start-1 row-start-1 flex items-center gap-3 pr-6;
+  }
+
+  .tw-select-icon {
+    @apply col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4;
+  }
+
+  .tw-select-panel {
+    @apply mt-2 max-h-60 w-[var(--button-width)] overflow-auto rounded-md bg-white py-1 text-base shadow-lg outline-1 outline-black/5;
+    @apply transition duration-100 ease-in sm:text-sm;
+  }
+
+  .tw-select-option {
+    @apply border-0 bg-white outline-none focus-visible:outline-none;
+    @apply relative block cursor-default py-2 pr-9 pl-3 text-left text-gray-900 select-none;
+    @apply hover:bg-ed-blue-light;
+    @apply focus:bg-ed-blue focus:text-white focus:outline-none;
+  }
+
+  .tw-select-option-active {
+    @apply bg-ed-blue text-white;
+  }
+
+  .tw-select-option[aria-selected="true"] .tw-select-option-label {
+    @apply font-semibold;
+  }
+
+  .tw-select-check {
+    @apply absolute inset-y-0 right-0 flex items-center pr-4 text-ed-blue;
+  }
+
+  .tw-select-option[aria-selected="false"] .tw-select-check {
+    @apply hidden;
+  }
+
+  .tw-select-option:focus .tw-select-check,
+  .tw-select-option:focus-visible .tw-select-check {
+    @apply text-white;
+  }
+
+  .tw-select-empty {
+    @apply px-3.5 py-2 text-sm/6 text-gray-500;
+  }
+}
+
+/* Fonts */
+
+@font-face {
+  font-family: 'Cabin';
+  font-weight: 400;
+  src: url('../src/assets/fonts/lexend/Lexend/static/Lexend-Regular.ttf') format('truetype');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cabin';
+  font-weight: 500;
+  src: url('../src/assets/fonts/lexend/Lexend/static/Lexend-Medium.ttf') format('truetype');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cabin';
+  font-weight: 600;
+  src: url('../src/assets/fonts/lexend/Lexend/static/Lexend-SemiBold.ttf') format('truetype');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cabin';
+  font-weight: 700;
+  src: url('../src/assets/fonts/lexend/Lexend/static/Lexend-SemiBold.ttf') format('truetype');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cabin';
+  font-weight: 800;
+  src: url('../src/assets/fonts/lexend/Lexend/static/Lexend-Bold.ttf') format('truetype');
+  font-style: normal;
+}
+ 
+
+/* Classi struttura standard */
+/* Variabili colori
+nero, bianco e trasparente
+bianco brand, nero brand
+primary-800, primary-600, primary-400, primary-200, primary-100
+secondary-800, secondary-600, secondary-400, secondary-200, secondary-100
+gray-900, gray-800, gray-700, gray-600, gray-500
+color success, warning, danger, error, info
+pesi tutti
+heading hover (con opacità)
+size tutti
+radius 
+shadow 
+padding default, padding card, padding form
+TODO: da chiedere a GPT come si fa a definire queste variabili nel db
+*/
+:root{
+  --ed-blue-dark: #000027;
+  --ed-blue: #0c0cba;
+  --ed-blue-light: #0c0cba;
+  --ed-yellow: #b8ee38;
+  --ed-purple: #8660f7;
+  --ed-background: #F7F9FF;
+  --ed-white: #FFFFFF;
+  --ed-video-overlay: rgba(13, 22, 59, 0.2);
+  --ed-shadow-card: rgba(206, 209, 217, 0.2);
+  --ed-gray-dark: #9CA0AA;
+  --ed-gray-text: #202020;
+  --ed-gray-light: #DBDFEA;
+  --ed-red: #E05845;
+  --ed-green: #77C745;
+}
+@media screen and (max-width: 767px) {
+  .body{
+      padding-left: 5px!important;
+      padding-right: 5px!important;
+      margin-left: 0px;
+      
+  }
+}
+.ed-breadcrumb {
+  font-family: 'Cabin', sans-serif;
+  font-size: 14px;
+  color: var(--ed-shadow-card);
+}
+
+
+input:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+  -webkit-text-fill-color: #111827;
+}
+
+.mat-tab-group {
+    font-family: 'Cabin', sans-serif;
+}
+
+.mat-tab-label {
+    height: 48px;
+    padding: 0 5px;
+    cursor: pointer;
+    box-sizing: border-box;
+    opacity: .6;
+    min-width: 160px;
+    text-align: center;
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    white-space: nowrap;
+    position: relative;
+}
+
+/* Classi Pulsante */
+
+.primary-button {
+  color: var(--ed-white); 
+  background-color:var(--ed-blue); 
+  margin: 10px; 
+  font-family: 'Cabin', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  text-transform: uppercase;
+  border-color: var(--ed-blue);
+  border-width: 1px;
+  border-style:solid;
+  box-shadow: 0px 0px !important;
+}
+
+.primary-button:hover {
+  color: var(--ed-blue); 
+  background-color:var(--ed-white); 
+  margin: 10px;
+  font-family: 'Cabin', sans-serif;
+  border-color: var(--ed-blue);
+  border-width: 1px;
+  border-style:solid;
+   
+}
+
+.primary-button-home {
+  color: var(--ed-blue); 
+  background-color:var(--ed-white); 
+  margin: 10px; 
+  font-family: 'Cabin', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  text-transform: uppercase;
+  border-color: var(--ed-white);
+  border-width: 1px;
+  border-style:solid;
+  box-shadow: 0px 0px !important;
+}
+
+.primary-button-light {
+  color: var(--ed-blue); 
+  background-color:var(--ed-white); 
+  margin: 10px;
+  box-shadow: 0px 0px !important;
+  font-family: 'Cabin', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  text-transform: uppercase;
+  border-color: var(--ed-blue);
+  border-width: 1px;
+  border-style:solid;
+}
+
+.primary-button-light:hover {
+  color: var(--ed-white); 
+  background-color:var(--ed-blue); 
+  margin: 10px;
+  font-family: 'Cabin', sans-serif;
+  border-color: var(--ed-blue);
+  border-width: 1px;
+  border-style:solid;
+ 
+   
+}
+
+
+/* Classi tabelle */
+
+table {
+  width: 100%;
+}
+
+.ed-table
+{
+  box-shadow: 0px 0px !important;
+}
+
+.mat-table {
+  width: 100%;
+  font-family: 'Cabin', sans-serif;
+}
+
+.mat-cell {
+  color: var(--ed-gray-text);
+  font-weight: 400;
+}
+
+.mat-header-cell {
+  color: var(--ed-gray-text);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+
+/* Classi generiche */
+
+.ed-full-width {
+  width: 100%;
+  max-width: 100%;
+}
+
+.ed-full-heigth {
+  height: 100vh;
+}
+
+.ed-pointer {
+  cursor: pointer;
+}
+
+.ed-background {
+  background-image: url('../src/assets/img/login-background.png');
+}
+
+.ed-margin-30
+{
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.ed-margin-top-30
+{
+  margin-top: 30px;
+}
+
+.ed-font {
+  font-family: 'Cabin', sans-serif;
+}
+
+.ed-footer {
+  background-color: white;
+  padding: 18px;
+  padding-bottom: 5px;
+  margin: 0px !important;
+  position: relative;
+  left: 0;
+  width: 100% !important;
+  overflow: visible;
+  text-align: center;
+}
+
+.ed-footer-text {
+  font-size: 14px;
+  color: #8e8e8e
+}
+
+.ed-header-title {
+  margin-top: 3px;
+  font-size: 18px;
+}
+
+@media screen and (min-width: 992px) {
+  .ed-header-title {
+    margin-top: 3px;
+    font-size: 18px;
+    display: none;
+  }
+}
+
+@media screen and (max-width: 991px) and (min-width: 768px){
+  .ed-header-title {
+    margin-top: 3px;
+    font-size: 18px;
+    display: none;
+  }
+}
+
+.mat-tab-label .mat-tab-label-content {
+  font-family: 'Cabin', sans-serif !important;
+}
+
+
+
+
+/* ED Platform custom elements */
+
+
+/* Elementi custom */
+
+
+/* Visualizzazione desktop */
+@media screen and (min-width: 992px) {
+  .ed-form-block {
+    padding: 5rem;
+  }
+}
+
+/* Visualizzazione tablet */
+@media screen and (max-width: 991px) and (min-width: 768px) {
+  .ed-form-block {
+    padding: 3rem;
+  }
+}
+
+/* Visualizzazione mobile */
+@media screen and (max-width: 767px) {
+  .ed-form-block {
+    padding: 2rem;
+  }
+}
+
+/* Visualizzazione desktop */
+@media screen and (min-width: 992px) {
+  .ed-block-standard {
+    background-color: white;
+    border-radius: 16px;
+    padding: 40px;
+    margin: 5px 5px 15px 0px;
+    box-shadow: 2px 2px 5px rgba(169, 169, 169, 0.2);
+  }
+}
+
+/* Visualizzazione tablet */
+@media screen and (max-width: 991px) and (min-width: 768px) {
+  .ed-block-standard {
+    background-color: white;
+    border-radius: 16px;
+    padding: 30px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    box-shadow: 2px 2px 3px rgba(169, 169, 169, 0.2);
+  }
+}
+
+/* Visualizzazione mobile */
+@media screen and (max-width: 767px) {
+  .ed-block-standard {
+    background-color: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 5px;
+    box-shadow: 1px 1px 2px rgba(169, 169, 169, 0.2);
+  }
+}
+
+/* Visualizzazione desktop */
+@media screen and (min-width: 992px) {
+  .ed-container {
+    display: block;
+    margin: 20px;
+    max-width: 100% !important;
+  }
+}
+
+/* Visualizzazione tablet */
+@media screen and (max-width: 991px) and (min-width: 768px) {
+  .ed-container {
+    display: block;
+    margin: 0px;
+    max-width: 100% !important;
+  }
+}
+
+/* Visualizzazione mobile */
+@media screen and (max-width: 767px) {
+  .ed-container {
+    display: block;
+    margin: 0px;
+    max-width: 100% !important;
+  }
+}
+
+.totals-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(17,24,39,.06);
+  border: 1px solid #eef2f7;
+}
+
+@media screen and (max-width: 767px) {
+  .totals-card {
+    display: none;
+  }
+}

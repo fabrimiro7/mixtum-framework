@@ -1,0 +1,75 @@
+<div class="mx-auto max-w-3xl px-6 py-8">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-900">Nuovo Documento</h1>
+      <p class="text-sm text-slate-500">Crea un documento a partire da un template.</p>
+    </div>
+    <app-workspace-selector></app-workspace-selector>
+  </div>
+
+  <form [formGroup]="form" class="mt-6 tw-form-stack" (ngSubmit)="createDocument()">
+    <div class="tw-field">
+      <label class="tw-label">Titolo</label>
+      <input
+        type="text"
+        formControlName="title"
+        class="tw-input"
+        placeholder="Titolo documento"
+      />
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="tw-field">
+        <label class="tw-label">Tipo</label>
+        <app-tw-select
+          formControlName="type_id"
+          [items]="types"
+          bindValue="id"
+          bindLabel="title"
+          placeholder="Seleziona tipo"
+        ></app-tw-select>
+      </div>
+
+      <div class="tw-field">
+        <label class="tw-label">Template</label>
+        <app-tw-select
+          formControlName="template_id"
+          [items]="templates"
+          bindValue="id"
+          bindLabel="title"
+          placeholder="Seleziona template"
+        ></app-tw-select>
+      </div>
+    </div>
+
+    <div class="tw-field">
+      <label class="tw-label">Status</label>
+      <app-tw-select
+        formControlName="status_code"
+        [items]="statuses"
+        bindValue="code"
+        bindLabel="title"
+      ></app-tw-select>
+    </div>
+
+    <div class="tw-field">
+      <label class="tw-label">Context JSON</label>
+      <textarea
+        rows="6"
+        formControlName="context"
+        class="tw-textarea font-mono"
+        placeholder='{"client": {"first_name": "Mario"}}'
+      ></textarea>
+    </div>
+
+    <div class="flex justify-end">
+      <button
+        type="submit"
+        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+        [disabled]="saving"
+      >
+        Crea documento
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,133 @@
+<h1>Personalizza</h1>
+
+<div class="ed-container">
+  <div class="customizer-wrapper">
+    <div class="warning" *ngIf="!isSuperAdmin">
+      Solo i SuperAdmin possono modificare queste impostazioni.
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Globale">
+        <div class="branding-section">
+          <h3>Colori</h3>
+          <div class="color-grid">
+            <div class="color-row" *ngFor="let key of colorKeys">
+              <div class="color-label">{{ key }}</div>
+              <input
+                type="color"
+                class="tw-input color-input"
+                [value]="colorInputValue(globalColors[key] || effectiveColors[key])"
+                (input)="onGlobalColorInput(key, $any($event.target).value)"
+                [disabled]="!isSuperAdmin"
+              />
+              <input
+                type="text"
+                class="tw-input text-input"
+                [ngModel]="globalColors[key]"
+                (ngModelChange)="onGlobalColorText(key, $event)"
+                [placeholder]="effectiveColors[key]"
+                [ngModelOptions]="{standalone: true}"
+                [disabled]="!isSuperAdmin"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="branding-section">
+          <h3>Loghi</h3>
+          <div class="logo-grid">
+            <div class="logo-item">
+              <div class="logo-title">Logo esteso</div>
+              <img *ngIf="getLogoDisplay('global','logo_full')" [src]="getLogoDisplay('global','logo_full')" class="logo-preview" />
+              <input type="file" accept="image/*" (change)="onLogoFileChange('global','logo_full',$event)" [disabled]="!isSuperAdmin" />
+            </div>
+            <div class="logo-item">
+              <div class="logo-title">Logo compatto</div>
+              <img *ngIf="getLogoDisplay('global','logo_compact')" [src]="getLogoDisplay('global','logo_compact')" class="logo-preview" />
+              <input type="file" accept="image/*" (change)="onLogoFileChange('global','logo_compact',$event)" [disabled]="!isSuperAdmin" />
+            </div>
+            <div class="logo-item">
+              <div class="logo-title">Favicon</div>
+              <img *ngIf="getLogoDisplay('global','favicon')" [src]="getLogoDisplay('global','favicon')" class="favicon-preview" />
+              <input type="file" accept="image/*" (change)="onLogoFileChange('global','favicon',$event)" [disabled]="!isSuperAdmin" />
+            </div>
+          </div>
+        </div>
+
+        <button mat-raised-button class="primary-button" (click)="saveGlobal()" [disabled]="!isSuperAdmin">
+          Salva globale
+        </button>
+      </mat-tab>
+
+      <mat-tab label="Workspace">
+        <div class="branding-section">
+          <h3>Workspace</h3>
+          <div class="workspace-field tw-field">
+            <label class="tw-label">Seleziona workspace</label>
+            <app-tw-select
+              [ngModel]="selectedWorkspaceId"
+              (ngModelChange)="onWorkspaceSelect($event)"
+              [items]="workspaces"
+              bindValue="id"
+              bindLabel="workspace_name"
+              placeholder="Seleziona workspace"
+            ></app-tw-select>
+          </div>
+        </div>
+
+        <div class="branding-section" *ngIf="selectedWorkspaceId">
+          <h3>Colori (override)</h3>
+          <div class="color-grid">
+            <div class="color-row" *ngFor="let key of colorKeys">
+              <div class="color-label">{{ key }}</div>
+              <input
+                type="color"
+                class="tw-input color-input"
+                [value]="colorInputValue(workspaceColors[key] || effectiveColors[key])"
+                (input)="onWorkspaceColorInput(key, $any($event.target).value)"
+                [disabled]="!isSuperAdmin"
+              />
+              <input
+                type="text"
+                class="tw-input text-input"
+                [ngModel]="workspaceColors[key]"
+                (ngModelChange)="onWorkspaceColorText(key, $event)"
+                [placeholder]="effectiveColors[key]"
+                [ngModelOptions]="{standalone: true}"
+                [disabled]="!isSuperAdmin"
+              />
+              <button mat-button class="reset-button" (click)="resetWorkspaceColor(key)" [disabled]="!isSuperAdmin">
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="branding-section" *ngIf="selectedWorkspaceId">
+          <h3>Loghi (override)</h3>
+          <div class="logo-grid">
+            <div class="logo-item">
+              <div class="logo-title">Logo esteso</div>
+              <img *ngIf="getLogoDisplay('workspace','logo_full')" [src]="getLogoDisplay('workspace','logo_full')" class="logo-preview" />
+              <input type="file" accept="image/*" (change)="onLogoFileChange('workspace','logo_full',$event)" [disabled]="!isSuperAdmin" />
+            </div>
+            <div class="logo-item">
+              <div class="logo-title">Logo compatto</div>
+              <img *ngIf="getLogoDisplay('workspace','logo_compact')" [src]="getLogoDisplay('workspace','logo_compact')" class="logo-preview" />
+              <input type="file" accept="image/*" (change)="onLogoFileChange('workspace','logo_compact',$event)" [disabled]="!isSuperAdmin" />
+            </div>
+            <div class="logo-item">
+              <div class="logo-title">Favicon</div>
+              <img *ngIf="getLogoDisplay('workspace','favicon')" [src]="getLogoDisplay('workspace','favicon')" class="favicon-preview" />
+              <input type="file" accept="image/*" (change)="onLogoFileChange('workspace','favicon',$event)" [disabled]="!isSuperAdmin" />
+            </div>
+          </div>
+        </div>
+
+        <button mat-raised-button class="primary-button" (click)="saveWorkspace()" [disabled]="!isSuperAdmin || !selectedWorkspaceId">
+          Salva workspace
+        </button>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

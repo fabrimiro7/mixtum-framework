@@ -1,0 +1,50 @@
+<div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1>Aggiungi Categoria </h1>
+      </div>
+      <div class="col-md-auto text-md-right">
+        <button id="btn" mat-raised-button class="primary-button-light"
+          (click)="redirectTo('/academy/')"><span>ANNULLA</span>
+        </button>
+        <button  id="btn" mat-raised-button class="primary-button"
+          (click)="addCategoryAPI()">
+          <span>AGGIUNGI</span>
+          <mat-icon fontIcon="arrow_forward"></mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="ed-block-standard">
+        <div [formGroup]="categoriesForm" class="form">
+            <div class="tw-field" style="width: 100%;">
+                <label class="tw-label">Nome Categoria</label>
+                <textarea
+                  class="tw-textarea"
+                  placeholder="Nome della categoria"
+                  formControlName="title"
+                ></textarea>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Descrizione</label>
+              <textarea
+                class="tw-textarea"
+                placeholder="Descrizione della categoria"
+                formControlName="description"
+              ></textarea>
+            </div>
+            <div class="tw-field" style="width: 100%;">
+              <label class="tw-label">Categoria Genitore</label>
+              <app-tw-select
+                placeholder="Indica una categoria genitore se presente"
+                formControlName="parent"
+                [items]="categories"
+                bindValue="id"
+                bindLabel="title"
+              ></app-tw-select>
+          </div>
+        </div>
+    </div>
+</div>

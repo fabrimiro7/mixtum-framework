@@ -1,0 +1,109 @@
+<div class="rich-text-toolbar flex flex-wrap gap-2">
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-md border border-slate-200 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    (click)="format('bold')"
+    [disabled]="disabled"
+  >
+    <strong>B</strong>
+  </button>
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-md border border-slate-200 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    (click)="format('italic')"
+    [disabled]="disabled"
+  >
+    <em>I</em>
+  </button>
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-md border border-slate-200 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    (click)="format('underline')"
+    [disabled]="disabled"
+  >
+    <span class="underline">U</span>
+  </button>
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-md border border-slate-200 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    (click)="format('insertUnorderedList')"
+    [disabled]="disabled"
+  >
+    • Liste
+  </button>
+  <button
+    type="button"
+    class="inline-flex items-center justify-center rounded-md border border-slate-200 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    (click)="format('insertOrderedList')"
+    [disabled]="disabled"
+  >
+    1. Liste
+  </button>
+  <button
+    type="button"
+    class="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    [class.active]="showLinkForm"
+    (click)="toggleLinkForm()"
+    [disabled]="disabled"
+  >
+    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M12.586 3.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828-2.828l.586-.586a1 1 0 10-1.414-1.414l-.586.586a4 4 0 105.656 5.656l3-3a4 4 0 10-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5z"></path>
+      <path d="M7.414 16.414a2 2 0 01-2.828-2.828l3-3a2 2 0 012.828 2.828l-.586.586a1 1 0 101.414 1.414l.586-.586a4 4 0 10-5.656-5.656l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5z"></path>
+    </svg>
+    <span>Aggiungi link</span>
+  </button>
+</div>
+<div class="link-form mt-3 space-y-3" *ngIf="showLinkForm">
+  <div class="tw-field">
+    <label class="tw-label">URL</label>
+    <input
+      type="url"
+      placeholder="https://example.com"
+      [value]="linkUrl"
+      (input)="onLinkUrlInput($event)"
+      class="tw-input"
+    />
+  </div>
+  <div class="tw-field">
+    <label class="tw-label">Testo del link</label>
+    <input
+      type="text"
+      placeholder="Titolo del link"
+      [value]="linkLabel"
+      (input)="onLinkLabelInput($event)"
+      class="tw-input"
+    />
+  </div>
+  <div class="link-actions flex items-center gap-2">
+    <button
+      type="button"
+      class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+      (click)="applyLink()"
+      [disabled]="!linkUrl"
+    >
+      Inserisci
+    </button>
+    <button
+      type="button"
+      class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+      (click)="cancelLink()"
+    >
+      Annulla
+    </button>
+  </div>
+</div>
+<div class="rich-text-editor-wrapper" [class.disabled]="disabled">
+  <div
+    #editor
+    class="rich-text-editor"
+    contenteditable="true"
+    (input)="onInput()"
+    (blur)="touch()"
+    (paste)="onPaste($event)"
+    [attr.aria-label]="placeholder"
+  ></div>
+
+  <div class="placeholder" *ngIf="!hasContent()">
+    {{ placeholder }}
+  </div>
+</div>

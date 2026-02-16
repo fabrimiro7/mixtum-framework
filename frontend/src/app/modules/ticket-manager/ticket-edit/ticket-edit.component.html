@@ -1,0 +1,193 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Modifica ticket</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button id="btn" mat-raised-button class="primary-button-light" (click)="redirectTo('tickets/' + idTicket)">
+        <span>ANNULLA</span>
+      </button>
+      <button id="btn" mat-raised-button class="primary-button" (click)="saveChangesTicket()">
+        Salva Modifiche
+      </button>
+      <button id="btnDelete" mat-raised-button color="warn" class="primary-button-light" (click)="openDeleteDialog(deleteDialog)"
+              [disabled]="deleteInProgress">
+        Elimina ticket
+      </button>
+    </div>
+  </div>
+</div>
+
+<ng-template #deleteDialog>
+  <h2 mat-dialog-title>Elimina ticket</h2>
+  <mat-dialog-content>
+    Sei sicuro di voler eliminare definitivamente questo ticket? L'operazione non è reversibile.
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Annulla</button>
+    <button mat-raised-button color="warn" [disabled]="deleteInProgress" [mat-dialog-close]="'confirm'">
+      Elimina
+    </button>
+  </mat-dialog-actions>
+</ng-template>
+
+
+<div class="container-fluid">
+  <div class="row">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-sm-8">
+
+      <!-- MODIFICABILE -->
+      <div class="ed-block-standard">
+        <form [formGroup]="ticketForm" class="tw-form-stack">
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Titolo</label>
+            <input
+              class="tw-input"
+              formControlName="title"
+            >
+          </div>
+
+      <div class="rich-description-field tw-field">
+        <label class="field-label">Descrizione</label>
+        <app-rich-text-editor
+          formControlName="description"
+          placeholder="Descrivi qui il tuo problema"
+          style="--editor-min-height: 200px;"
+        ></app-rich-text-editor>
+      </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Cliente</label>
+            <app-tw-select
+              formControlName="client"
+              [items]="clientList"
+              bindValue="id"
+              [labelKeys]="['first_name', 'last_name', 'email']"
+            ></app-tw-select>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- COMPORTAMENTI -->
+      <div *ngIf="ticket.expected_action || ticket.real_action" class="ed-block-standard">
+        <h4>Comportamento atteso:</h4>
+        <p>{{ ticket.expected_action }}</p>
+
+        <h4>Comportamento reale:</h4>
+        <p>{{ ticket.real_action }}</p>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-sm-4">
+
+      <!-- DETTAGLI CLIENTE -->
+      <!-- DETTAGLI ASSISTENTI -->
+      <div *ngIf="userType == 'Utente'" class="ed-block-standard">
+        <h4>Dettagli assistente/i</h4>
+        <div *ngFor="let assignee of ticket.assignees">
+          <p>Nome: {{assignee.first_name}}</p>
+          <p>Ruolo: Sviluppatore</p>
+        </div>
+      </div>
+
+      <!-- MODIFICA DETTAGLI AGGIUNTIVI -->
+      <div class="ed-block-standard">
+        <h4>Modifica dettagli aggiuntivi</h4>
+
+        <form [formGroup]="ticketForm" class="tw-form-stack">
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Tipo</label>
+            <app-tw-select
+              formControlName="ticket_type"
+              [items]="ticketTypes"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Assegna</label>
+            <app-tw-select
+              formControlName="assignees"
+              [items]="workerList"
+              bindLabel="email"
+              [compareWith]="compareFn"
+              [multiple]="true"
+            ></app-tw-select>
+          </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Stato</label>
+            <app-tw-select
+              formControlName="status"
+              [items]="[
+                { value: 'open', label: 'Aperto' },
+                { value: 'in_progress', label: 'Preso in carico' },
+                { value: 'resolved', label: 'Risolto' },
+                { value: 'closed', label: 'Chiuso' }
+              ]"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Priorità</label>
+            <app-tw-select
+              formControlName="priority"
+              [items]="[
+                { value: 'low', label: 'Bassa' },
+                { value: 'medium', label: 'Media' },
+                { value: 'high', label: 'Alta' }
+              ]"
+              bindValue="value"
+              bindLabel="label"
+            ></app-tw-select>
+          </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Stima oraria</label>
+            <div class="tw-input-addon">
+              <input
+                class="tw-input pr-10"
+                type="number"
+                formControlName="hours_estimation"
+              >
+              <span class="tw-input-suffix">Min</span>
+            </div>
+          </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Stima costo</label>
+            <div class="tw-input-addon">
+              <input
+                class="tw-input pr-8"
+                type="number"
+                formControlName="cost_estimation"
+              >
+              <span class="tw-input-suffix">€</span>
+            </div>
+          </div>
+
+          <div class="tw-field" style="width: 100%">
+            <label class="tw-label">Data risoluzione (prevista)</label>
+            <input
+              class="tw-input"
+              type="datetime-local"
+              formControlName="expected_resolution_date"
+            >
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

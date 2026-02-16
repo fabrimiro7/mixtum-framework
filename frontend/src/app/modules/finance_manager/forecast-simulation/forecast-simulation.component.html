@@ -1,0 +1,253 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row align-items-center mb-4">
+    <div class="col">
+      <h1>Simulazione Previsionale</h1>
+    </div>
+    <div class="col-md-auto">
+      <button mat-raised-button class="primary-button-light me-2" (click)="navigateTo('/finance')">
+        <mat-icon fontIcon="arrow_back"></mat-icon>
+        <span>MOVIMENTI</span>
+      </button>
+      <button mat-raised-button class="primary-button" (click)="toggleHypotheticalForm()">
+        <mat-icon fontIcon="add"></mat-icon>
+        <span>AGGIUNGI IPOTETICO</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Warning Banner -->
+  <div class="warning-banner" *ngIf="hasNegativeBalance()">
+    <mat-icon>warning</mat-icon>
+    <span>
+      <strong>Attenzione:</strong> Il saldo proiettato scende sotto zero 
+      (minimo: {{ formatCurrency(getMinBalance()) }})
+    </span>
+  </div>
+
+  <!-- Period Selection -->
+  <div class="ed-block-standard mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-4">
+        <h3 class="mb-0">Periodo di Previsione</h3>
+      </div>
+      <div class="col-md-4">
+        <mat-chip-list>
+          <mat-chip [selected]="months === 3" (click)="setMonths(3)">3 Mesi</mat-chip>
+          <mat-chip [selected]="months === 6" (click)="setMonths(6)">6 Mesi</mat-chip>
+          <mat-chip [selected]="months === 12" (click)="setMonths(12)">12 Mesi</mat-chip>
+        </mat-chip-list>
+      </div>
+      <div class="col-md-4">
+        <div class="options-row">
+          <mat-slide-toggle [(ngModel)]="includeHypothetical" (change)="onOptionsChange()">
+            Includi ipotetici
+          </mat-slide-toggle>
+          <mat-slide-toggle [(ngModel)]="includeRecurring" (change)="onOptionsChange()">
+            Includi ricorrenti
+          </mat-slide-toggle>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hypothetical Transaction Form -->
+  <div class="ed-block-standard mb-4" *ngIf="showHypotheticalForm">
+    <h3>Aggiungi Movimento Ipotetico</h3>
+    <form [formGroup]="hypotheticalForm" class="tw-form-grid">
+      <div class="row">
+        <div class="col-md-3 tw-field">
+          <label class="tw-label">Tipo</label>
+          <app-tw-select
+            formControlName="transaction_type"
+            [items]="[{ value: 'income', label: 'Entrata' }, { value: 'expense', label: 'Uscita' }]"
+            bindValue="value"
+            bindLabel="label"
+          ></app-tw-select>
+        </div>
+        <div class="col-md-3 tw-field">
+          <label class="tw-label">Conto</label>
+          <app-tw-select
+            formControlName="account"
+            [items]="accounts"
+            bindValue="id"
+            bindLabel="name"
+          ></app-tw-select>
+        </div>
+        <div class="col-md-3 tw-field">
+          <label class="tw-label">Categoria</label>
+          <app-tw-select
+            formControlName="category"
+            [items]="getFilteredCategories()"
+            bindValue="id"
+            bindLabel="name"
+          ></app-tw-select>
+        </div>
+        <div class="col-md-3 tw-field">
+          <label class="tw-label">Data</label>
+          <input
+            class="tw-input"
+            type="date"
+            formControlName="competence_date"
+          >
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 tw-field">
+          <label class="tw-label">Descrizione</label>
+          <input
+            class="tw-input"
+            formControlName="description"
+            placeholder="Es: Acquisto nuovo server"
+          >
+        </div>
+        <div class="col-md-3 tw-field">
+          <label class="tw-label">Importo (€)</label>
+          <input
+            class="tw-input"
+            type="number"
+            formControlName="gross_amount"
+            step="0.01"
+          >
+        </div>
+        <div class="col-md-3 d-flex align-items-center">
+          <button mat-raised-button class="primary-button" (click)="addHypotheticalTransaction()">
+            <mat-icon>add</mat-icon> Aggiungi
+          </button>
+          <button mat-button class="ms-2" (click)="toggleHypotheticalForm()">Annulla</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Forecast Summary -->
+  <div class="row mb-4" *ngIf="forecast && !loading">
+    <div class="col-md-3">
+      <div class="summary-card">
+        <span class="summary-label">Saldo Iniziale</span>
+        <span class="summary-value">{{ formatCurrency(forecast.starting_balance) }}</span>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="summary-card income-card">
+        <span class="summary-label">Entrate Previste</span>
+        <span class="summary-value">+{{ formatCurrency(forecast.total_projected_income) }}</span>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="summary-card expense-card">
+        <span class="summary-label">Uscite Previste</span>
+        <span class="summary-value">-{{ formatCurrency(forecast.total_projected_expenses) }}</span>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="summary-card" [ngClass]="forecast.ending_balance >= 0 ? 'positive-card' : 'negative-card'">
+        <span class="summary-label">Saldo Finale</span>
+        <span class="summary-value">{{ formatCurrency(forecast.ending_balance) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forecast Chart -->
+  <div class="ed-block-standard mb-4" *ngIf="forecast && !loading && forecastChartData.length > 0">
+    <h3>Proiezione Saldo</h3>
+    <ngx-charts-line-chart
+      [view]="view"
+      [results]="forecastChartData"
+      [scheme]="$any(colorScheme)"
+      [xAxis]="true"
+      [yAxis]="true"
+      [legend]="true"
+      [legendPosition]="$any('below')"
+      [showXAxisLabel]="true"
+      [showYAxisLabel]="true"
+      [xAxisLabel]="'Periodo'"
+      [yAxisLabel]="'Importo (€)'"
+      [yAxisTickFormatting]="yAxisTickFormatting"
+      [autoScale]="true">
+    </ngx-charts-line-chart>
+  </div>
+
+  <!-- Period Details Table -->
+  <div class="ed-block-standard mb-4" *ngIf="forecast && !loading">
+    <h3>Dettaglio per Periodo</h3>
+    <table mat-table [dataSource]="forecast.periods" class="w-100">
+      <ng-container matColumnDef="period">
+        <th mat-header-cell *matHeaderCellDef>Periodo</th>
+        <td mat-cell *matCellDef="let row">{{ row.period_label }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="income">
+        <th mat-header-cell *matHeaderCellDef>Entrate</th>
+        <td mat-cell *matCellDef="let row" class="text-income">
+          +{{ formatCurrency(row.projected_income) }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="expenses">
+        <th mat-header-cell *matHeaderCellDef>Uscite</th>
+        <td mat-cell *matCellDef="let row" class="text-expense">
+          -{{ formatCurrency(row.projected_expenses) }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="net">
+        <th mat-header-cell *matHeaderCellDef>Netto</th>
+        <td mat-cell *matCellDef="let row" [ngClass]="row.net_cashflow >= 0 ? 'text-income' : 'text-expense'">
+          {{ formatCurrency(row.net_cashflow) }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="balance">
+        <th mat-header-cell *matHeaderCellDef>Saldo Proiettato</th>
+        <td mat-cell *matCellDef="let row" [ngClass]="row.cumulative_balance >= 0 ? 'text-income' : 'text-expense'">
+          <strong>{{ formatCurrency(row.cumulative_balance) }}</strong>
+          <mat-icon *ngIf="row.cumulative_balance < 0" class="warning-icon">warning</mat-icon>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="['period', 'income', 'expenses', 'net', 'balance']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['period', 'income', 'expenses', 'net', 'balance']"></tr>
+    </table>
+  </div>
+
+  <!-- Recurring Rules -->
+  <div class="ed-block-standard" *ngIf="recurringRules.length > 0 && !loading">
+    <div class="row align-items-center mb-3">
+      <div class="col">
+        <h3 class="mb-0">Movimenti Ricorrenti Inclusi</h3>
+      </div>
+      <div class="col-auto">
+        <button mat-button (click)="navigateTo('/finance/recurring')">
+          Gestisci <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="recurring-list">
+      <div class="recurring-item" *ngFor="let rule of recurringRules">
+        <div class="recurring-info">
+          <span class="recurring-name">{{ rule.name }}</span>
+          <span class="recurring-frequency">{{ rule.frequency_display }}</span>
+        </div>
+        <span class="recurring-amount" [ngClass]="rule.transaction_type === 'income' ? 'text-income' : 'text-expense'">
+          {{ rule.transaction_type === 'income' ? '+' : '-' }}{{ formatCurrency(rule.gross_amount) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warnings -->
+  <div class="ed-block-standard mt-4" *ngIf="forecast && forecast.warnings.length > 0">
+    <h3>Avvertenze</h3>
+    <ul class="warnings-list">
+      <li *ngFor="let warning of forecast.warnings">
+        <mat-icon>info</mat-icon> {{ warning }}
+      </li>
+    </ul>
+  </div>
+</div>

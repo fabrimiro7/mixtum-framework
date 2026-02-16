@@ -1,0 +1,230 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row align-items-center mb-4">
+    <div class="col">
+      <h1>Gestione Movimenti</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button mat-raised-button class="primary-button-light me-2" (click)="navigateTo('/finance/chart')">
+        <mat-icon fontIcon="bar_chart"></mat-icon>
+        <span>Grafici</span>
+      </button>
+      <button mat-raised-button class="primary-button-light me-2" (click)="navigateTo('/finance/simulation')">
+        <mat-icon fontIcon="trending_up"></mat-icon>
+        <span>Simulazione</span>
+      </button>
+      <button mat-raised-button class="primary-button" (click)="navigateTo('/finance/add')">
+        <mat-icon fontIcon="add"></mat-icon>
+        <span>Nuovo Movimento</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="row mb-3">
+    <div class="col-auto">
+      <mat-chip-list>
+        <mat-chip (click)="navigateTo('/finance/accounts')">
+          <mat-icon>account_balance</mat-icon> Banche e Conti
+        </mat-chip>
+        <mat-chip (click)="navigateTo('/finance/recurring')">
+          <mat-icon>repeat</mat-icon> Movimenti Ricorrenti
+        </mat-chip>
+      </mat-chip-list>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="ed-block-standard mb-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-6">
+      <div class="tw-field">
+        <label class="tw-label">Periodo</label>
+        <app-tw-select
+          [(ngModel)]="selectedPeriod"
+          (selectionChange)="onFilterChange()"
+          [items]="periodOptions"
+          bindValue="value"
+          bindLabel="label"
+        ></app-tw-select>
+      </div>
+      <div class="tw-field">
+        <label class="tw-label">Conto</label>
+        <app-tw-select
+          [(ngModel)]="selectedAccount"
+          (selectionChange)="onFilterChange()"
+          [items]="accountFilterOptions"
+          bindValue="id"
+          bindLabel="name"
+        ></app-tw-select>
+      </div>
+      <div class="tw-field">
+        <label class="tw-label">Categoria</label>
+        <app-tw-select
+          [(ngModel)]="selectedCategory"
+          (selectionChange)="onFilterChange()"
+          [items]="categoryFilterOptions"
+          bindValue="id"
+          bindLabel="name"
+        ></app-tw-select>
+      </div>
+      <div class="tw-field">
+        <label class="tw-label">Tipo</label>
+        <app-tw-select
+          [(ngModel)]="selectedType"
+          (selectionChange)="onFilterChange()"
+          [items]="typeFilterOptions"
+          bindValue="value"
+          bindLabel="label"
+        ></app-tw-select>
+      </div>
+      <div class="tw-field">
+        <label class="tw-label">Stato</label>
+        <app-tw-select
+          [(ngModel)]="selectedStatus"
+          (selectionChange)="onFilterChange()"
+          [items]="statusFilterOptions"
+          bindValue="value"
+          bindLabel="label"
+        ></app-tw-select>
+      </div>
+      <div class="tw-field">
+        <label class="tw-label">Cerca</label>
+        <div class="tw-input-addon">
+          <input
+            class="tw-input pr-9"
+            [(ngModel)]="searchText"
+            (keyup.enter)="onFilterChange()"
+            placeholder="Descrizione..."
+            aria-label="Cerca"
+          >
+          <mat-icon class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">search</mat-icon>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <button mat-button color="primary" (click)="clearFilters()">
+          <mat-icon>clear</mat-icon> Resetta filtri
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Table -->
+  <div class="ed-block-standard" *ngIf="!loading">
+    <table mat-table [dataSource]="transactions" matSort (matSortChange)="onSortChange($event)" class="w-100">
+      
+      <!-- Date Column -->
+      <ng-container matColumnDef="competence_date">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Data</th>
+        <td mat-cell *matCellDef="let row">{{ formatDate(row.competence_date) }}</td>
+      </ng-container>
+
+      <!-- Description Column -->
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Descrizione</th>
+        <td mat-cell *matCellDef="let row">
+          <span [matTooltip]="row.description">{{ truncate(row.description, 40) }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Category Column -->
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef>Categoria</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="category-badge" [style.background-color]="row.category?.color + '20'" [style.color]="row.category?.color">
+            {{ row.category?.name || '-' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Account Column -->
+      <ng-container matColumnDef="account">
+        <th mat-header-cell *matHeaderCellDef>Conto</th>
+        <td mat-cell *matCellDef="let row">{{ row.account?.name || '-' }}</td>
+      </ng-container>
+
+      <!-- Type Column -->
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="type-badge" [ngClass]="getTypeClass(row.transaction_type)">
+            {{ getTypeLabel(row.transaction_type) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Amount Column -->
+      <ng-container matColumnDef="gross_amount">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Importo</th>
+        <td mat-cell *matCellDef="let row">
+          <span [ngClass]="{'amount-income': row.transaction_type === 'income', 'amount-expense': row.transaction_type === 'expense'}">
+            {{ row.transaction_type === 'income' ? '+' : '-' }}{{ formatCurrency(row.gross_amount) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Stato</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="status-badge" [ngClass]="getStatusClass(row.status)">
+            {{ getStatusLabel(row.status) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Azioni">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="viewDetail(row.id)">
+              <mat-icon>visibility</mat-icon>
+              <span>Dettagli</span>
+            </button>
+            <button mat-menu-item (click)="editTransaction(row.id)">
+              <mat-icon>edit</mat-icon>
+              <span>Modifica</span>
+            </button>
+            <button mat-menu-item *ngIf="row.status !== 'paid'" (click)="markAsPaid(row)">
+              <mat-icon>check_circle</mat-icon>
+              <span>Segna come pagato</span>
+            </button>
+            <button mat-menu-item (click)="deleteTransaction(row)" class="text-danger">
+              <mat-icon color="warn">delete</mat-icon>
+              <span>Elimina</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="viewDetail(row.id)" class="clickable-row"></tr>
+    </table>
+
+    <!-- Empty state -->
+    <div *ngIf="transactions.length === 0" class="text-center py-4">
+      <mat-icon class="empty-icon">receipt_long</mat-icon>
+      <p>Nessun movimento trovato</p>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,108 @@
+<div class="container-fluid mt-3">
+  <div class="ed-block-standard">
+    <div class="form tw-form-stack" [formGroup]="ticketForm">
+
+      <h3 class="priority-label">Apri un ticket</h3>
+      <!-- OGGETTO -->
+      <div class="tw-field" style="width: 100%;">
+        <label class="tw-label">Oggetto</label>
+        <input
+          class="tw-input"
+          placeholder="Scrivi qui il titolo del ticket"
+          formControlName="title"
+        >
+      </div>
+
+      <!-- DESCRIZIONE -->
+      <div class="rich-description-field tw-field">
+        <label class="field-label">Descrizione</label>
+        <app-rich-text-editor
+          formControlName="description"
+          placeholder="Descrivi qui il tuo problema"
+          style="--editor-min-height: 220px;"
+        ></app-rich-text-editor>
+      </div>
+
+      <!-- PRODOTTO -->
+      <div class="tw-field" style="width: 100%;">
+        <label class="tw-label">Prodotto</label>
+        <app-tw-select
+          placeholder="Seleziona il prodotto"
+          formControlName="project"
+          [items]="projectList"
+          bindValue="id"
+          bindLabel="title"
+        ></app-tw-select>
+      </div>
+
+      <!-- PRIORITÀ – CARD SELEZIONABILI -->
+        <h3 class="priority-label">Priorità</h3>
+
+        <div class="priority-cards">
+
+        <div 
+            class="priority-card"
+            [class.selected]="selectedPriority === 'low'"
+            (click)="selectPriority('low')">
+            <div class="priority-header">
+            <span class="priority-dot low"></span>
+            <h4>Bassa</h4>
+            </div>
+            <p>La richiesta può essere gestita nell'arco dei prossimi 3-4 giorni, non blocca l'operatività del servizio.</p>
+        </div>
+
+        <div 
+            class="priority-card"
+            [class.selected]="selectedPriority === 'medium'"
+            (click)="selectPriority('medium')">
+            <div class="priority-header">
+            <span class="priority-dot medium"></span>
+            <h4>Media</h4>
+            </div>
+            <p>La richiesta deve essere gestita entro 1-2 giorni, non blocca il servizio ma può causare rallentamenti.</p>
+        </div>
+
+        <div 
+            class="priority-card"
+            [class.selected]="selectedPriority === 'high'"
+            (click)="selectPriority('high')">
+            <div class="priority-header">
+            <span class="priority-dot high"></span>
+            <h4>Alta</h4>
+            </div>
+            <p>La richiesta deve essere gestita in giornata, blocca l'operatività del servizio.</p>
+        </div>
+
+        </div>
+
+        <h3 class="priority-label" style="margin-top: 25px;">Allegati (facoltativo)</h3>
+
+        <div 
+        class="dropzone"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()">
+
+        <p>Trascina qui i file oppure <span class="dz-click">clicca per selezionare</span></p>
+
+        <input 
+            #fileInput 
+            type="file" 
+            multiple 
+            (change)="onFileSelected($event)" 
+            style="display: none;">
+        </div>
+
+        <!-- LISTA ALLEGATI -->
+        <div *ngFor="let attachment of attachments">
+        <p>{{ attachment.title }}</p>
+        </div>
+
+      <button id="btnForm" mat-raised-button class="primary-button" (click)="addTicket()">
+        <span>Apri un ticket</span>
+        <mat-icon fontIcon="arrow_forward"></mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

@@ -24,9 +24,9 @@ This repository uses Docker Compose with:
 
 In DEV, `docker-compose.override.yml` is automatically applied (HTTP-only).
 
-### Start
+### Start (backend-only)
 
-    docker compose up -d --build
+    docker compose --profile backend up -d --build
 
 ### Logs
 
@@ -42,6 +42,16 @@ In DEV, `docker-compose.override.yml` is automatically applied (HTTP-only).
 
 **Access**: `http://localhost/`
 
+### Frontend (optional)
+
+For local frontend development, use `ng serve` (recommended) and point it to the backend:
+
+    cd frontend
+    npm install
+    npm start
+
+Then configure the API base URL in your Angular environment to `http://localhost:8000` (or use a proxy config).
+
 * * *
 
 🌍 PROD (Server) — Automatic SSL + Auto-renew
@@ -52,7 +62,7 @@ In DEV, `docker-compose.override.yml` is automatically applied (HTTP-only).
 
 Create/fill the `.env` file in the project root with at least:
 
-    SERVER_NAME=ticket-admin.efestodev.com
+    SERVER_NAME=admin-ticket.efestodev.com
     CERTBOT_EMAIL=you@domain.com
     
     POSTGRES_DB=mixtumdb
@@ -67,10 +77,24 @@ Create/fill the `.env` file in the project root with at least:
 
     chmod +x deploy.sh nginx/init.sh nginx/ssl-watch.sh certbot/entrypoint.sh scripts/entrypoint.sh
 
-3) Deploy with a single command
--------------------------------
+3) Deploy with a single command (backend-only)
+----------------------------------------------
 
     ./deploy.sh
+
+To serve the SPA from the nginx container, set the profile:
+
+    DEPLOY_PROFILE=frontend ./deploy.sh
+
+### Docker commands (PROD)
+
+Backend-only (explicit):
+
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backend up -d --build
+
+Frontend-in-container:
+
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile frontend up -d --build
 
 What `deploy.sh` does:
 
@@ -82,6 +106,22 @@ What `deploy.sh` does:
 *   Runs `renew --dry-run` to confirm renewals will work
 
 **Access**: `https://$SERVER_NAME`
+
+* * *
+
+🌐 Frontend (optional) — Netlify
+================================
+
+Recommended split:
+
+* Frontend: `https://ticket.efestodev.com`
+* Backend/API: `https://admin-ticket.efestodev.com` (or any backend subdomain)
+
+Backend CORS must allow the frontend origin:
+
+    CORS_ALLOWED_ORIGINS=https://ticket.efestodev.com
+
+In Angular, set `apiBase` to the backend URL (e.g. `https://admin-ticket.efestodev.com` or `.../api`).
 
 * * *
 

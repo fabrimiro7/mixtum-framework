@@ -1,0 +1,21 @@
+.ed-toolbar
+{
+    z-index: 1;
+    position: fixed;
+    top: 0;
+    background-color: white;
+    border: 1px solid;
+    border-color: white;
+    box-shadow: 10px 3px 5px #dedede;
+    margin-bottom: 25px;
+}
+
+.example-spacer {
+    flex: 1 1 auto;
+}
+
+.workspace-select {
+    margin-left: 16px;
+    min-width: 200px;
+}
+  

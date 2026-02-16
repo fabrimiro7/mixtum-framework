@@ -20,12 +20,15 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
     serializer_class = WorkspaceSerializer
 
     # Potresti voler filtrare i workspace in base all'utente loggato
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     if user.is_authenticated:
-    #         # Mostra solo i workspace a cui l'utente appartiene
-    #         return Workspace.objects.filter(workspaceuser__user=user).distinct()
-    #     return Workspace.objects.none() # O tutti, o lancia un errore
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return Workspace.objects.none()
+
+        if getattr(user, "is_superuser", False) or getattr(user, "permission", 0) == 100:
+            return Workspace.objects.all()
+
+        return Workspace.objects.filter(workspaceuser__user=user).distinct()
 
 class WorkspaceUserViewSet(viewsets.ModelViewSet):
     """

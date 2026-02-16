@@ -1,0 +1,53 @@
+/* Stili generali */
+::ng-deep {
+    .cropper-view-box,
+    .cropper-face {
+      border-radius: 50%;
+    }
+  
+    .cropper-view-box {
+      outline: 0;
+      box-shadow: 0 0 0 1px #39f;
+    }
+  }
+  
+  .crop-actions {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+  
+  /* Media query per dispositivi di piccole dimensioni */
+  @media (max-width: 576px) {
+    /* Ridurre l'altezza dell'immagine */
+    #image {
+      height: 90vw; /* Puoi regolare l'altezza come desideri */
+      max-height: 400px; /* Assicurati che l'immagine non cresca troppo */
+    }
+  
+    .crop-actions {
+      margin-top: 0.5rem; /* Ridurre lo spazio sopra i pulsanti */
+    }
+  
+    /* Ridurre lo spazio sopra e sotto l'immagine */
+    .image-container {
+      padding: 0; /* Ridurre il padding del contenitore */
+    }
+  }
+  
+  /* Nuovi stili per centrare l'immagine */
+  .image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0; /* Rimuovere il padding */
+    margin: 0; /* Rimuovere il margine */
+  }
+  
+  .image-container img {
+    display: block;
+    margin: 0 auto;
+    width: 50%; /* Fare in modo che l'immagine occupi tutta la larghezza del contenitore */
+  }
+  

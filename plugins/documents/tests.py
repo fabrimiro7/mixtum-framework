@@ -384,3 +384,104 @@ class DocumentAPITest(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["title"], "API Contract")
         self.assertEqual(len(response.data["blocks"]), 1)
+
+
+class DocumentBlocksApiTest(TestCase):
+    """API tests for template blocks and document blocks CRUD."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.workspace = Workspace.objects.create(
+            workspace_name="API Workspace",
+        )
+        self.status_draft = DocumentStatus.objects.create(
+            workspace=self.workspace,
+            code="draft",
+            title="Draft",
+            is_terminal=False,
+        )
+        self.doc_type = DocumentType.objects.create(
+            workspace=self.workspace,
+            code="contract",
+            title="Contract",
+        )
+        self.template = DocumentTemplate.objects.create(
+            workspace=self.workspace,
+            title="Base Template",
+        )
+        self.block_a = Block.objects.create(
+            workspace=self.workspace,
+            title="Header",
+            content="Header content",
+        )
+        self.block_b = Block.objects.create(
+            workspace=self.workspace,
+            title="Body",
+            content="Body content",
+        )
+        DocumentTemplateBlock.objects.create(
+            template=self.template,
+            block=self.block_a,
+            position=0,
+        )
+        self.document = create_document_from_template(
+            workspace_id=self.workspace.pk,
+            title="Doc 1",
+            type_id=self.doc_type.pk,
+            template_id=self.template.pk,
+            status_code="draft",
+        )
+
+    def _headers(self):
+        return {"HTTP_X_WORKSPACE_ID": str(self.workspace.pk)}
+
+    def test_template_block_crud(self):
+        payload = {
+            "template": self.template.pk,
+            "block": self.block_b.pk,
+        }
+        res = self.client.post(
+            "/api/documents/template-blocks/",
+            payload,
+            format="json",
+            **self._headers(),
+        )
+        self.assertEqual(res.status_code, 201)
+        tpl_block_id = res.data["id"]
+
+        patch = self.client.patch(
+            f"/api/documents/template-blocks/{tpl_block_id}/",
+            {"title_snapshot": "Updated"},
+            format="json",
+            **self._headers(),
+        )
+        self.assertEqual(patch.status_code, 200)
+        self.assertEqual(patch.data["title_snapshot"], "Updated")
+
+        delete = self.client.delete(
+            f"/api/documents/template-blocks/{tpl_block_id}/",
+            **self._headers(),
+        )
+        self.assertEqual(delete.status_code, 204)
+
+    def test_document_block_update_respects_freeze(self):
+        doc_block = DocumentBlock.objects.filter(document=self.document).first()
+        self.assertIsNotNone(doc_block)
+
+        res = self.client.patch(
+            f"/api/documents/document-blocks/{doc_block.pk}/",
+            {"title": "Updated"},
+            format="json",
+            **self._headers(),
+        )
+        self.assertEqual(res.status_code, 200)
+
+        freeze_document(document=self.document)
+
+        res_after = self.client.patch(
+            f"/api/documents/document-blocks/{doc_block.pk}/",
+            {"title": "Should Fail"},
+            format="json",
+            **self._headers(),
+        )
+        self.assertEqual(res_after.status_code, 400)

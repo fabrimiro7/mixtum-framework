@@ -1,0 +1,230 @@
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col">
+      <h1>Ticket #{{ ticket.id }}</h1>
+    </div>
+    <div class="col-md-auto text-md-right">
+      <button id="btn" mat-raised-button class="primary-button-light" (click)="redirectTo('tickets')">
+        <mat-icon fontIcon="arrow_backward"></mat-icon>
+        <span>Torna ai ticket</span>
+      </button>
+      <button *ngIf="userType === 'SuperAdmin' || userType === 'Admin'" id="btn" mat-raised-button class="primary-button"
+              (click)="redirectTo('/tickets/edit/' + idTicket)">
+        <span>modifica</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- COL SX -->
+    <div class="col-sm-8">
+
+      <!-- COMPORTAMENTI -->
+      <div *ngIf="(ticket.expected_action != null && ticket.expected_action != '' && ticket.real_action != null && ticket.real_action != '')"
+           class="ed-block-standard">
+        <h4>Comportamento atteso</h4>
+        <hr>
+        <p>{{ ticket.expected_action }}</p>
+
+        <h4>Comportamento reale</h4>
+        <hr>
+        <p>{{ ticket.real_action }}</p>
+      </div>
+
+      <!-- CONVERSAZIONE -->
+      <div class="ed-block-standard">
+        <h4>Conversazione</h4>
+        <hr>
+
+        <div *ngFor="let message of messages">
+          <div class="row">
+            <div class="col-xs-1 d-flex flex-column justify-content-end align-items-end" id="userCol">
+              <mat-icon *ngIf="message.author.id != userId" fontIcon="account_circle"></mat-icon>
+            </div>
+
+            <div class="col">
+              <!-- MESSAGGIO MIO -->
+              <div *ngIf="message.author.id === userId" class="messageBubbleRight">
+                <p id="user">{{ message.author.first_name }} {{ message.author.last_name }}</p>
+                <div class="message-content" [innerHTML]="getSafeHtml(message.text)"></div>
+
+                <div *ngIf="message.attachments?.length > 0">
+                  <div class="attachments-container">
+                    <p style="margin-right: 5px;">File:</p>
+                    <a *ngFor="let attachment of message.attachments"
+                       class="message-attachment"
+                       href="{{ attachment.file }}"
+                       target="_blank">{{ truncate(attachment.title, 20) }}</a>
+                  </div>
+                </div>
+
+                <p id="date" class="date">{{ dataParser.ISOToNormalDate(message.insert_date) }}</p>
+              </div>
+
+              <!-- MESSAGGIO ALTRI -->
+              <div *ngIf="message.author.id != userId" class="messageBubbleLeft">
+                <p id="user">{{ message.author.first_name }} {{ message.author.last_name }}</p>
+                <div class="message-content" [innerHTML]="getSafeHtml(message.text)"></div>
+
+                <div *ngIf="message.attachments?.length > 0">
+                  <div class="attachments-container">
+                    <p style="margin-right: 5px;">File:</p>
+                    <a *ngFor="let attachment of message.attachments"
+                       class="message-attachment"
+                       href="{{ attachment.file }}"
+                       target="_blank">{{ truncate(attachment.title, 20) }}</a>
+                  </div>
+                </div>
+
+                <p id="date">{{ dataParser.ISOToNormalDate(message.insert_date) }}</p>
+              </div>
+            </div>
+
+            <div class="col-xs-1 d-flex flex-column justify-content-end align-items-start" id="userCol">
+              <mat-icon *ngIf="message.author.id === userId" fontIcon="account_circle"></mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="chat-input-container">
+          <mat-icon fontIcon="attach_file" class="attachment-icon" (click)="triggerFileInput()"></mat-icon>
+          <input type="file" #fileInput (change)="onFileSelected($event)" multiple style="display: none;">
+          <app-rich-text-editor
+            class="chat-editor"
+            [formControl]="newMessage"
+            placeholder="Scrivi il tuo messaggio..."
+            style="--editor-min-height: 90px;"
+          ></app-rich-text-editor>
+          <button id="btnSend" mat-button class="primary-button send-button" (click)="sendMessage()">
+            <mat-icon fontIcon="send"></mat-icon>
+          </button>
+        </div>
+
+        <div class="attachments-container">
+          <div *ngFor="let attachment of attachments" class="attachment">
+            <p>{{ truncate(attachment.title, 20) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL DX -->
+    <div class="col-sm-4">
+      <!-- ALLEGATI -->
+      <div *ngIf="ticket.attachments?.length > 0 && userType !== 'Utente'" class="ed-block-standard">
+        <h4>Allegati</h4>
+        <hr>
+        <mat-list class="attachments-list">
+          <div class="attachments-container">
+            <div *ngFor="let attachment of ticket.attachments" class="attachment-item">
+              <mat-list-item class="custom-padding">
+                <mat-icon matListItemIcon>attach_file</mat-icon>
+                <div>
+                  <div matLine>
+                    <a href="{{ attachment.file }}">{{ truncate(attachment.title, 20) }}</a>
+                  </div>
+                </div>
+              </mat-list-item>
+            </div>
+          </div>
+        </mat-list>
+      </div>
+
+      <!-- DETTAGLI ASSISTENTI (per Utente) -->
+      <div *ngIf="userType == 'Utente' && ticket.status != 'open'" class="ed-block-standard">
+        <h4>Dettagli assistente/i</h4>
+        <hr>
+        <div *ngFor="let assignee of ticket.assignees">
+          <p>Nome: {{ assignee.first_name }}</p>
+          <p>Ruolo: Sviluppatore</p>
+          <hr>
+        </div>
+      </div>
+
+      <!-- TICKET CORRELATO -->
+      <div *ngIf="ticket.ticket_linked" class="ed-block-standard">
+        <h4>Ticket correlato</h4>
+        <hr>
+        <a [routerLink]="['/tickets', ticket.ticket_linked.id]" class="related-ticket-link">
+          <span class="status-dot"
+                [ngClass]="{
+                  'status-resolved': ticket.ticket_linked.status === 'resolved' || ticket.ticket_linked.status === 'closed',
+                  'status-in-progress': ticket.ticket_linked.status === 'in_progress'
+                }"></span>
+          <span>{{ ticket.ticket_linked.title }}</span>
+        </a>
+      </div>
+
+      <!-- DETTAGLI AGGIUNTIVI -->
+      <div class="ed-block-standard">
+        <h4>Dettagli aggiuntivi</h4>
+        <hr>
+
+        <div class="icon-text">
+          <mat-icon fontIcon="info_outline"></mat-icon>
+          <span>
+            <b>Stato ticket:</b>
+            {{ (ticket.status == 'open' ? 'Aperto' : '') || (ticket.status == 'in_progress' ? 'Preso in carico' : '') || (ticket.status == 'resolved' ? 'Risolto' : '') || (ticket.status == 'closed' ? 'Chiuso' : '') }}
+          </span>
+        </div>
+
+        <div class="icon-text">
+          <mat-icon fontIcon="account_circle"></mat-icon>
+          <span>
+            <b>Assegnato a:</b>
+            <span *ngFor="let assignee of ticket.assignees; let i = index">
+              {{ assignee.first_name }}<span *ngIf="i < ticket.assignees.length - 1">, </span>
+            </span>
+          </span>
+        </div>
+
+        <div *ngIf="userType !== 'Utente'" class="icon-text">
+          <mat-icon fontIcon="error"></mat-icon>
+          <span><b>Priorità:</b> {{ (ticket.priority == 'low' ? 'Bassa' : '') || (ticket.priority == 'medium' ? 'Media' : '') || (ticket.priority == 'high' ? 'Alta' : '') || '-' }}</span>
+        </div>
+
+        <div *ngIf="userType !== 'Utente'" class="icon-text">
+          <mat-icon fontIcon="schedule"></mat-icon>
+          <span><b>Stima oraria:</b> {{ ticket.hours_estimation || '-' }} min</span>
+        </div>
+
+        <div *ngIf="userType !== 'Utente'" class="icon-text">
+          <mat-icon fontIcon="euro"></mat-icon>
+          <span><b>Stima costo:</b> {{ ticket.cost_estimation || '-' }}€</span>
+        </div>
+
+        <div *ngIf="ticket.status !== 'open' && userType === 'Utente'" class="icon-text">
+          <mat-icon fontIcon="euro"></mat-icon>
+          <span><b>Stima costo:</b> {{ (ticket.cost_estimation ? ticket.cost_estimation + '€' : "Compreso nell'assistenza") }}</span>
+        </div>
+
+        <div class="icon-text">
+          <mat-icon fontIcon="event"></mat-icon>
+          <span><b>Data di apertura:</b> {{ ticket.opening_date }}</span>
+        </div>
+
+        <div *ngIf="userType !== 'Utente'" class="icon-text">
+          <mat-icon fontIcon="event_note"></mat-icon>
+          <span><b>Data risoluzione (prevista):</b> {{ ticket.expected_resolution_date }}</span>
+        </div>
+
+        <div class="icon-text">
+          <mat-icon fontIcon="event_note"></mat-icon>
+          <span><b>Data chiusura:</b> {{ ticket.closing_date || '-' }}</span>
+        </div>
+      </div>
+
+      <!-- DETTAGLI CLIENTE -->
+      <div *ngIf="userType !== 'Utente'" class="ed-block-standard">
+        <h4>Dettagli cliente</h4>
+        <hr>
+        <p><b>Cliente:</b> {{ ticket.client?.email }}</p>
+        <p><b>Prodotto:</b> {{ project.title }}</p>
+      </div>
+    </div>
+  </div>
+</div>

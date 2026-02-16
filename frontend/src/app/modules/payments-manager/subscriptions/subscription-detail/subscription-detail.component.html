@@ -1,0 +1,58 @@
+<!--HEADER-->
+<div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1>{{subscription.title}}</h1>
+      </div>
+      <div class="col-md-auto text-md-right">
+        <button id="btn" mat-raised-button class="primary-button-light" (click)="redirectTo('payments')">
+          <mat-icon fontIcon="arrow_backward"></mat-icon>
+          <span>Torna agli abbonamenti</span>
+        </button>
+        <button *ngIf="showEditButton" id="btn" mat-raised-button class="primary-button"
+          (click)="redirectTo('/payments/subscription/edit/' + subscriptionID + '/')">
+          <span>modifica</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!--BODY-->
+<div class="container-fluid">
+    <div class="row">
+      <!--LEFT COLUMN-->
+      <div class="col-sm-8">
+  
+        <!--Subscription resume section-->
+        <div class="ed-block-standard">
+          <h4>Descrizione</h4>
+          <p>{{subscription.description}}</p>
+        </div>
+
+        </div>
+  
+      <!--RIGHT COLUMN-->
+      <div class="col-sm-4">
+        <div class="ed-block-standard">
+            <h4>Dettagli Abbonamento</h4>
+            <p><b>Stato: </b> <span [ngClass]="getStatusClass(subscription.status)">{{(subscription.status == 'active' ? 'Attivo' : '') || 
+                (subscription.status == 'expired' ? 'Scaduto' : '')}}</span></p>
+            <p><b>Progetto: </b> <span *ngFor="let project of subscription.project; let i = index">
+                <ng-container *ngIf="i == 0"> </ng-container>
+                {{ project.title }}<span *ngIf="i < subscription.project.length - 1">, </span>
+            </span>
+            </p>
+            <p><b>Data inizio: </b> {{trasformDate(subscription.start_date)}}</p>
+            <p><b>Data fine: </b> {{trasformDate(subscription.end_date)}}</p>
+            <p><b>Importo: </b> {{subscription.amount}}€</p>
+          </div>
+        <!--User or Worker details secion-->
+        <div *ngIf="userType !== 'Utente'" class="ed-block-standard">
+          <h4>Dettagli cliente</h4>
+          <p><b>Cliente:</b> {{subscription.customer?.first_name}} {{subscription.customer?.last_name}}</p>
+          <p><b>Email:</b> {{subscription.customer?.email}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
