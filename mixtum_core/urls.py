@@ -57,6 +57,9 @@ urlpatterns = [
     # Report manager
     path('api/report_manager/', include(('plugins.report.urls', 'report'), namespace='report')),
 
+    # SEO manager
+    path('api/per_seo/', include(('plugins.per_seo.urls', 'per_seo'), namespace='per_seo')),
+
     # Workspace
     path('api/workspace/', include('base_modules.workspace.urls')),
 

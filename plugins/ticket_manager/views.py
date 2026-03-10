@@ -47,6 +47,7 @@ class TicketList(generics.ListCreateAPIView):
         "closing_date", "-closing_date",
         "priority", "-priority",
         "priority_custom", "-priority_custom",
+        "metatag__released_at", "-metatag__released_at",
     }
 
     def _parse_date_or_datetime(self, s: str) -> datetime:
@@ -157,14 +158,17 @@ class TicketList(generics.ListCreateAPIView):
 
             qs = qs.filter(client_id__in=other_user_ids, status="open")
 
-        # status (singolo)
+        # status (singolo) — non applicato se released=true
         status_val = params.get("status")
-        if status_val:
+        released_val = params.get("released")
+        if released_val == "true":
+            qs = qs.filter(metatag__released=True)
+        elif status_val:
             qs = qs.filter(status=status_val)
 
-        # status__in (lista CSV)
+        # status__in (lista CSV) — solo se non released
         status_in_val = params.get("status__in")
-        if status_in_val:
+        if status_in_val and released_val != "true":
             statuses = [s.strip() for s in status_in_val.split(",") if s.strip()]
             if statuses:
                 qs = qs.filter(status__in=statuses)
@@ -200,10 +204,16 @@ class TicketList(generics.ListCreateAPIView):
             if project:
                 qs = qs.filter(project_id=project)
 
-        # search (su titolo/descrizione)
+        # search: per id (se numerico) o parole in titolo/descrizione
         search = params.get("search")
         if search:
-            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search))
+            search = search.strip()
+            if search:
+                try:
+                    sid = int(search)
+                    qs = qs.filter(Q(id=sid) | Q(title__icontains=search) | Q(description__icontains=search))
+                except (TypeError, ValueError):
+                    qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search))
 
         # -----------------------------
         # Filtri periodo su opening_date
@@ -351,6 +361,35 @@ class TicketPutView(APIView):
         error_list = [serializer.errors[k][0] for k in serializer.errors]
         print(error_list)
         return Response({"data": serializer.errors, "message": "fail"}, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        ticket = get_object_or_404(Ticket.objects.select_related("ticket_workspace"), pk=pk)
+        if not can_edit_ticket(request.user, ticket):
+            return Response({"message": "permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        data = request.data
+        if "status" in data:
+            ticket.status = data["status"]
+        if "priority" in data:
+            ticket.priority = data["priority"]
+        if "assignees" in data:
+            try:
+                ids = [int(x) for x in data["assignees"]]
+                ticket.assignees.set(ids)
+            except (TypeError, ValueError):
+                return Response({"assignees": "Lista di ID utenti non valida"}, status=status.HTTP_400_BAD_REQUEST)
+        if "metatag" in data:
+            meta = dict(ticket.metatag) if isinstance(ticket.metatag, dict) else {}
+            incoming = data["metatag"]
+            if isinstance(incoming, dict):
+                if "released" in incoming:
+                    meta["released"] = bool(incoming["released"])
+                if "released_at" in incoming:
+                    val = incoming["released_at"]
+                    meta["released_at"] = val if val is None or isinstance(val, str) else str(val)
+            ticket.metatag = meta
+        ticket.save()
+        serializer = TicketSerializer(ticket)
+        return Response({"data": serializer.data, "message": "success"}, status=status.HTTP_200_OK)
 
 class TicketView(APIView):
     if REMOTE_API == True:

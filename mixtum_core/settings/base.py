@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "base_modules.links",
     "base_modules.integrations.twilio",
     "plugins.plugin_example",
+    "plugins.per_seo",
     "plugins.meeting",
     "plugins.academy",
     "plugins.payments_manager",

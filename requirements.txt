@@ -7,6 +7,7 @@ watchdog
 # DB & HTTP
 psycopg2-binary>=2.9,<3
 requests>=2.31
+httpx>=0.27
 django-cors-headers>=4.5,<5
 
 # REST
@@ -43,5 +44,7 @@ websocket-client>=1.6.1
 
 # Template rendering (documents plugin)
 Jinja2>=3.1,<4
+# SEO crawler
+beautifulsoup4>=4.12
 # Twilio (WhatsApp API)
 twilio>=9.0,<10
