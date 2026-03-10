@@ -104,6 +104,14 @@ celery*.log
 # Node (se hai front-end nel repo)
 # =========================
 node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/out-tsc/
+frontend/coverage/
+.angular/
+out-tsc/
+coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -1,4 +1,4 @@
-# integrations/slack/views.py
+# base_modules/integrations/slack/views.py
 """
 API Views for Slack integration.
 Provides endpoints for interacting with Slack.

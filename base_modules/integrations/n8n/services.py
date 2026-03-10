@@ -1,4 +1,4 @@
-# integrations/n8n/services.py
+# base_modules/integrations/n8n/services.py
 """
 n8n Integration Service
 Provides primitives for calling n8n webhooks with custom payloads.

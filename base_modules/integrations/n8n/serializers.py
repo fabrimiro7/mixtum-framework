@@ -1,4 +1,4 @@
-# integrations/n8n/serializers.py
+# base_modules/integrations/n8n/serializers.py
 """
 Serializers for n8n integration API endpoints.
 """

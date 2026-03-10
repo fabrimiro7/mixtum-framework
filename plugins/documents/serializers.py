@@ -120,20 +120,32 @@ class DocumentTemplateBlockWriteSerializer(serializers.ModelSerializer):
         model = DocumentTemplateBlock
         fields = [
             "id",
+            "template",
             "block",
             "title_snapshot",
             "content_snapshot",
             "position",
         ]
         read_only_fields = ["id"]
+        extra_kwargs = {
+            "position": {"required": False},
+            "template": {"required": False},
+        }
 
     def validate(self, attrs):
         """
         If snapshots are not provided, they will be auto-populated by the model's
         save() method.  Validate position uniqueness within the template.
         """
-        template = self.context.get("template")
-        position = attrs.get("position")
+        template = (
+            attrs.get("template")
+            or self.context.get("template")
+            or getattr(self.instance, "template", None)
+        )
+        position = attrs.get(
+            "position",
+            getattr(self.instance, "position", None),
+        )
         if template and position is not None:
             qs = DocumentTemplateBlock.objects.filter(
                 template=template,
@@ -231,6 +243,44 @@ class DocumentBlockSerializer(serializers.ModelSerializer):
             "position",
         ]
         read_only_fields = ["id"]
+
+
+class DocumentBlockWriteSerializer(serializers.ModelSerializer):
+    """Write serializer — create/update document blocks."""
+
+    class Meta:
+        model = DocumentBlock
+        fields = [
+            "id",
+            "document",
+            "source_template_block",
+            "title",
+            "content",
+            "position",
+        ]
+        read_only_fields = ["id"]
+        extra_kwargs = {
+            "position": {"required": False},
+        }
+
+    def validate(self, attrs):
+        document = attrs.get("document") or getattr(self.instance, "document", None)
+        position = attrs.get(
+            "position",
+            getattr(self.instance, "position", None),
+        )
+        if document and position is not None:
+            qs = DocumentBlock.objects.filter(
+                document=document,
+                position=position,
+            )
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    {"position": "A block already exists at this position in the document."}
+                )
+        return attrs
 
 
 class DocumentCategoryAssignmentSerializer(serializers.ModelSerializer):

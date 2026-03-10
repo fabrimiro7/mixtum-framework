@@ -1,4 +1,4 @@
-# integrations/slack/services.py
+# base_modules/integrations/slack/services.py
 """
 Slack Integration Service
 Provides primitives for interacting with Slack API:

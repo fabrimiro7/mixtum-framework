@@ -57,8 +57,14 @@ urlpatterns = [
     # Report manager
     path('api/report_manager/', include(('plugins.report.urls', 'report'), namespace='report')),
 
+    # SEO manager
+    path('api/per_seo/', include(('plugins.per_seo.urls', 'per_seo'), namespace='per_seo')),
+
     # Workspace
     path('api/workspace/', include('base_modules.workspace.urls')),
+
+    # Branding
+    path('api/branding/', include('base_modules.branding.urls')),
 
     # Finance
     path('api/finance_manager_accounts/', include(('plugins.finance_manager_accounts.urls', 'finance_manager_accounts'), namespace='finance_account')),
@@ -72,8 +78,8 @@ urlpatterns = [
     # Documents
     path('api/documents/', include(('plugins.documents.urls', 'documents'), namespace='documents')),
     # External Integrations
-    path('api/slack/', include(('integrations.slack.urls', 'slack'), namespace='slack')),
-    path('api/n8n/', include(('integrations.n8n.urls', 'n8n'), namespace='n8n')),
+    path('api/slack/', include(('base_modules.integrations.slack.urls', 'slack'), namespace='slack')),
+    path('api/n8n/', include(('base_modules.integrations.n8n.urls', 'n8n'), namespace='n8n')),
     # Twilio WhatsApp Integration
     path('api/whatsapp/', include(('base_modules.integrations.twilio.urls', 'twilio'), namespace='twilio')),
 ]

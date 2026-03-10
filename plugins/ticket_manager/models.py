@@ -90,6 +90,9 @@ class Ticket(models.Model):
     )
     payments_status = models.BooleanField(default=False)
 
+    # Metadati estesi (es. rilasciato, data rilascio)
+    metatag = models.JSONField(default=dict, blank=True)
+
     # Opzionale: aggiunta per future SLA o chiusure automatiche
     sla_due_at = models.DateTimeField(blank=True, null=True)
 

@@ -1,4 +1,4 @@
-# integrations/n8n/views.py
+# base_modules/integrations/n8n/views.py
 """
 API Views for n8n integration.
 Provides endpoints for calling n8n webhooks with custom payloads.

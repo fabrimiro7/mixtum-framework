@@ -1,4 +1,4 @@
-# integrations/slack/serializers.py
+# base_modules/integrations/slack/serializers.py
 """
 Serializers for Slack integration API endpoints.
 """
